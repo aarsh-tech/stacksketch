@@ -1,40 +1,14 @@
-import type { ReactNode } from 'react'
 import { Copy, Plus, Trash2, TriangleAlert, X } from 'lucide-react'
 
 import { fieldsOf, isValidKey, keyFromLabel, messagesOf, pascalCase, renameKey, ruleUnit, uniqueKey, updateItem, usableFields, withWidget } from '@stacksketch/core'
 import type { ChoiceOption, Condition, FieldMessages, FieldRules, Form, FormField, FormItem, SectionBreak, StepBreak, TextKind, Widget } from '@stacksketch/core'
-import { Button, Checkbox, Segmented, Select, TextInput, inputClass } from '@/components/ui/primitives'
+import { Button, Checkbox, Group, Labeled, Segmented, Select, TextInput, inputClass } from '@/components/ui/primitives'
 import { cx } from '@/lib/cx'
 import { conditionText, TEXT_KINDS, WIDGETS } from './widgets'
 
 type Change = (change: (form: Form) => Form) => void
 
 /* ---------- small pieces ---------- */
-
-function Group({ title, children, aside }: { title: string; children: ReactNode; aside?: ReactNode }) {
-  return (
-    <section className="border-b border-line px-4 py-3.5 last:border-b-0">
-      <div className="mb-2.5 flex items-center gap-2">
-        <h3 className="text-[12px] font-semibold text-ink-2">{title}</h3>
-        {aside ? <div className="ml-auto">{aside}</div> : null}
-      </div>
-      <div className="space-y-3">{children}</div>
-    </section>
-  )
-}
-
-/** A control with its label above it; the hint sits outside the label so it isn't read as part of the control's name. */
-function Labeled({ label, hint, children, className }: { label: string; hint?: ReactNode; children: ReactNode; className?: string }) {
-  return (
-    <div className={cx('flex min-w-0 flex-col gap-1 text-[11.5px] font-medium text-ink-3', className)}>
-      <label className="flex min-w-0 flex-col gap-1">
-        {label}
-        {children}
-      </label>
-      {hint ? <span className="font-normal">{hint}</span> : null}
-    </div>
-  )
-}
 
 function NumberInput({ value, onChange, label, min }: { value: number | undefined; onChange: (v: number | undefined) => void; label: string; min?: number }) {
   return (

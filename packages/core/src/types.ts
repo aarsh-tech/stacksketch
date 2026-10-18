@@ -1,7 +1,7 @@
 /**
  * The shared schema format. Every Stacksketch module reads and writes this:
  * the API explorer infers it from JSON, the form builder (phase 2) turns it
- * into fields, the contract designer (phase 3) attaches it to endpoints.
+ * into fields, the contract designer attaches it to endpoints.
  *
  * Objects are never inlined: each one is a named entry in `types`, and shapes
  * point at it with a `ref`. That keeps code generation simple and gives the

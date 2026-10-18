@@ -86,3 +86,41 @@ export type { SkippedField } from './form/fromSchema'
 export { FORM_ZOD_FUNCTIONS, formSchemaName, formValuesName, formZodRuntime, regexLiteral, shownWhen, toFormZod } from './form/zod'
 export { formToSchema } from './form/toSchema'
 export { formComponentName, formFileNames, toFormComponent } from './form/react'
+
+export type { Contract, ContractEndpoint, ContractParam, ContractResponse, ParamIn, RequestBody, ResponseStatus } from './contract/types'
+export {
+  addSchemaEndpoint,
+  contractProblems,
+  defaultSummary,
+  derivedName,
+  emptyContract,
+  functionNames,
+  hasRequestBody,
+  HTTP_METHODS,
+  isSuccess,
+  newEndpoint,
+  openApiPath,
+  pathParamNames,
+  renameContractType,
+  resourceGroups,
+  resourceOf,
+  statusOrder,
+  statusText,
+  successResponse,
+  syncPathParams,
+  typeUsage,
+  uniqueTypeName,
+  updateEndpoint,
+  upgradeContract,
+  usableContract,
+} from './contract/model'
+export type { AddedSchema, ContractProblem, ContractTarget, ResourceGroup } from './contract/model'
+export { isParamShape, mapRefs, sameShape, shapeFromParts, shapeLabel, shapeParts, STRING_FORMATS } from './contract/shapes'
+export type { ScalarKind, ShapeParts } from './contract/shapes'
+export { CONTRACT_FILES, toContractClient, toContractTypes, toContractZod } from './contract/generate'
+export type { ClientOptions } from './contract/generate'
+export { toOpenApi } from './openapi/export'
+export { fromOpenApi } from './openapi/import'
+export type { OpenApiImport } from './openapi/import'
+export { toYaml } from './openapi/yaml'
+export { typesInDependencyOrder } from './infer'

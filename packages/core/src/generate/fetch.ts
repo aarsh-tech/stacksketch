@@ -118,7 +118,7 @@ export function endpoint(schema: Schema, options: FetchOptions = {}): Endpoint {
   }
 }
 
-export const BODY_NOTE = `// The request body is untyped for now: the API contract designer (phase 3) will type it.`
+export const BODY_NOTE = `// The request body is untyped here. For a typed one, add this endpoint to the API contract in Stacksketch and use its client.`
 
 /** The fetch function alone, without imports. */
 export function fetchFunction(e: Endpoint): string {

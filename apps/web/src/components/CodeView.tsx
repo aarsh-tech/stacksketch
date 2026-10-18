@@ -5,17 +5,19 @@ import { go } from '@codemirror/lang-go'
 import { javascript } from '@codemirror/lang-javascript'
 import { json } from '@codemirror/lang-json'
 import { python } from '@codemirror/lang-python'
+import { yaml } from '@codemirror/lang-yaml'
 import { Decoration, EditorView } from '@codemirror/view'
 
 import { useResolvedTheme } from '@/hooks/useTheme'
 import { highlight as syntax } from '@/lib/codemirror'
 
-export type CodeLang = 'ts' | 'tsx' | 'json' | 'python' | 'go'
+export type CodeLang = 'ts' | 'tsx' | 'json' | 'yaml' | 'python' | 'go'
 
 const LANGS: Record<CodeLang, () => ReturnType<typeof json>> = {
   ts: () => javascript({ typescript: true }),
   tsx: () => javascript({ typescript: true, jsx: true }),
   json: () => json(),
+  yaml: () => yaml(),
   python: () => python(),
   go: () => go(),
 }

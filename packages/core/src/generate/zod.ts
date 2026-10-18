@@ -1,6 +1,6 @@
-import { rootTypeName } from '../infer'
+import { refsOf, rootTypeName, typesInDependencyOrder } from '../infer'
 import { camelCase, propertyKey } from '../names'
-import type { Schema, Shape } from '../types'
+import type { ObjectType, Schema, Shape } from '../types'
 
 /** `User` → `userSchema` */
 export function schemaName(typeName: string): string {
@@ -53,15 +53,35 @@ export function zodExpr(shape: Shape): string {
 
 /** Zod 4 schemas plus inferred types. Schemas are declared before the ones that use them. */
 export function toZod(schema: Schema): string {
-  const blocks: string[] = [`import { z } from 'zod'`]
-  for (const type of schema.types) {
-    const lines = type.fields.map((f) => `  ${propertyKey(f.key)}: ${zodExpr(f.shape)}${f.optional ? '.optional()' : ''},`)
-    const body = lines.length ? `z.object({\n${lines.join('\n')}\n})` : 'z.object({})'
-    blocks.push(`export const ${schemaName(type.name)} = ${body}\nexport type ${type.name} = z.infer<typeof ${schemaName(type.name)}>`)
-  }
+  const blocks: string[] = [`import { z } from 'zod'`, ...zodDeclarations(schema.types)]
   if (schema.root.kind !== 'ref') {
     const name = rootTypeName(schema)
     blocks.push(`export const ${schemaName(name)} = ${zodExpr(schema.root)}\nexport type ${name} = z.infer<typeof ${schemaName(name)}>`)
   }
   return blocks.join('\n\n') + '\n'
+}
+
+/**
+ * An exported schema and type per object type, each declared before the ones
+ * that use it. Fields inside a cycle (a category holding its subcategories)
+ * become getters, which is how Zod 4 does recursive objects.
+ */
+export function zodDeclarations(types: ObjectType[]): string[] {
+  const byName = new Map(types.map((t) => [t.name, t]))
+  /** can `from` reach `to` through its fields? */
+  const reaches = (from: string, to: string, seen = new Set<string>()): boolean => {
+    if (from === to) return true
+    if (seen.has(from)) return false
+    seen.add(from)
+    return (byName.get(from)?.fields ?? []).some((f) => refsOf(f.shape).some((r) => reaches(r, to, seen)))
+  }
+  return typesInDependencyOrder(types).map((type) => {
+    const lines = type.fields.map((f) => {
+      const expr = `${zodExpr(f.shape)}${f.optional ? '.optional()' : ''}`
+      const cyclic = refsOf(f.shape).some((r) => byName.has(r) && reaches(r, type.name))
+      return cyclic ? `  get ${propertyKey(f.key)}() {\n    return ${expr}\n  },` : `  ${propertyKey(f.key)}: ${expr},`
+    })
+    const body = lines.length ? `z.object({\n${lines.join('\n')}\n})` : 'z.object({})'
+    return `export const ${schemaName(type.name)} = ${body}\nexport type ${type.name} = z.infer<typeof ${schemaName(type.name)}>`
+  })
 }

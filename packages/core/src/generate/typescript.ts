@@ -1,6 +1,6 @@
 import { rootTypeName, typesTopDown } from '../infer'
 import { propertyKey } from '../names'
-import type { Schema, Shape } from '../types'
+import type { ObjectType, Schema, Shape } from '../types'
 
 export interface TypeScriptOptions {
   /** `interface User {}` or `type User = {}` */
@@ -43,19 +43,21 @@ function formatOf(shape: Shape): string | undefined {
 
 /** TypeScript declarations for every type in the schema, root first. */
 export function toTypeScript(schema: Schema, options: TypeScriptOptions = {}): string {
-  const { style = 'interface', readonly = false, formatComments = true } = options
   const blocks: string[] = []
   const root = schema.root
   if (root.kind !== 'ref') blocks.push(`export type ${rootTypeName(schema)} = ${tsType(root)}`)
-
-  for (const type of typesTopDown(schema)) {
-    const lines = type.fields.map((f) => {
-      const comment = formatComments ? formatOf(f.shape) : undefined
-      const prop = `${readonly ? 'readonly ' : ''}${propertyKey(f.key)}${f.optional ? '?' : ''}: ${tsType(f.shape)}`
-      return `  ${prop}${comment ? ` // ${comment}` : ''}`
-    })
-    const body = lines.length ? `{\n${lines.join('\n')}\n}` : '{}'
-    blocks.push(style === 'interface' ? `export interface ${type.name} ${body}` : `export type ${type.name} = ${body}`)
-  }
+  for (const type of typesTopDown(schema)) blocks.push(tsDeclaration(type, options))
   return blocks.join('\n\n') + '\n'
+}
+
+/** One object type as an exported interface (or type alias). */
+export function tsDeclaration(type: ObjectType, options: TypeScriptOptions = {}): string {
+  const { style = 'interface', readonly = false, formatComments = true } = options
+  const lines = type.fields.map((f) => {
+    const comment = formatComments ? formatOf(f.shape) : undefined
+    const prop = `${readonly ? 'readonly ' : ''}${propertyKey(f.key)}${f.optional ? '?' : ''}: ${tsType(f.shape)}`
+    return `  ${prop}${comment ? ` // ${comment}` : ''}`
+  })
+  const body = lines.length ? `{\n${lines.join('\n')}\n}` : '{}'
+  return style === 'interface' ? `export interface ${type.name} ${body}` : `export type ${type.name} = ${body}`
 }

@@ -1,9 +1,11 @@
 import { rootTypeName } from '../infer'
-import type { Schema, Shape } from '../types'
+import type { ObjectType, Schema, Shape } from '../types'
 
-type Json = { [key: string]: unknown }
+export type Json = { [key: string]: unknown }
 
-function node(shape: Shape): Json {
+/** One shape as JSON Schema. Refs point at `${refPrefix}Name`: `#/$defs/` here, `#/components/schemas/` in OpenAPI. */
+export function jsonSchemaNode(shape: Shape, refPrefix = '#/$defs/'): Json {
+  const node = (s: Shape) => jsonSchemaNode(s, refPrefix)
   switch (shape.kind) {
     case 'string':
       return shape.format ? { type: 'string', format: shape.format } : { type: 'string' }
@@ -18,11 +20,21 @@ function node(shape: Shape): Json {
     case 'unknown':
       return {}
     case 'ref':
-      return { $ref: `#/$defs/${shape.name}` }
+      return { $ref: `${refPrefix}${shape.name}` }
     case 'array':
       return { type: 'array', items: node(shape.items) }
     case 'union':
       return { anyOf: shape.options.map(node) }
+  }
+}
+
+/** An object type as JSON Schema. */
+export function objectJsonSchema(type: ObjectType, refPrefix = '#/$defs/'): Json {
+  const required = type.fields.filter((f) => !f.optional).map((f) => f.key)
+  return {
+    type: 'object',
+    properties: Object.fromEntries(type.fields.map((f) => [f.key, jsonSchemaNode(f.shape, refPrefix)])),
+    ...(required.length ? { required } : {}),
   }
 }
 
@@ -32,18 +44,11 @@ function node(shape: Shape): Json {
  */
 export function toJsonSchema(schema: Schema): Json {
   const $defs: Record<string, Json> = {}
-  for (const type of schema.types) {
-    const required = type.fields.filter((f) => !f.optional).map((f) => f.key)
-    $defs[type.name] = {
-      type: 'object',
-      properties: Object.fromEntries(type.fields.map((f) => [f.key, node(f.shape)])),
-      ...(required.length ? { required } : {}),
-    }
-  }
+  for (const type of schema.types) $defs[type.name] = objectJsonSchema(type)
   return {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
     title: rootTypeName(schema),
-    ...node(schema.root),
+    ...jsonSchemaNode(schema.root),
     ...(schema.types.length ? { $defs } : {}),
   }
 }

@@ -79,6 +79,33 @@ export function Checkbox({ label, checked, onChange }: { label: string; checked:
   )
 }
 
+/* ---------- settings panels ---------- */
+
+export function Group({ title, children, aside }: { title: string; children: ReactNode; aside?: ReactNode }) {
+  return (
+    <section className="border-b border-line px-4 py-3.5 last:border-b-0">
+      <div className="mb-2.5 flex items-center gap-2">
+        <h3 className="text-[12px] font-semibold text-ink-2">{title}</h3>
+        {aside ? <div className="ml-auto">{aside}</div> : null}
+      </div>
+      <div className="space-y-3">{children}</div>
+    </section>
+  )
+}
+
+/** A control with its label above it; the hint sits outside the label so it isn't read as part of the control's name. */
+export function Labeled({ label, hint, children, className }: { label: string; hint?: ReactNode; children: ReactNode; className?: string }) {
+  return (
+    <div className={cx('flex min-w-0 flex-col gap-1 text-[11.5px] font-medium text-ink-3', className)}>
+      <label className="flex min-w-0 flex-col gap-1">
+        {label}
+        {children}
+      </label>
+      {hint ? <span className="font-normal">{hint}</span> : null}
+    </div>
+  )
+}
+
 /* ---------- tabs and segmented control ---------- */
 
 /** A row of tabs. Arrow keys move between them. */

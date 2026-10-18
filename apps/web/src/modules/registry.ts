@@ -66,10 +66,10 @@ export const MODULES: ModuleInfo[] = [
     name: 'API contract',
     icon: Waypoints,
     phase: 3,
-    ready: false,
+    ready: true,
     audience: 'backend',
     surface: 'workbench',
-    summary: 'Design endpoints visually and export an OpenAPI 3.1 spec both teams agree on.',
+    summary: 'Design endpoints with typed params, bodies and responses, and export OpenAPI 3.1 and a typed client.',
     details: [
       'Method, path, params, request body, responses and error codes for every endpoint.',
       'Bodies are the same shared schemas, so frontend types and backend validation never drift.',

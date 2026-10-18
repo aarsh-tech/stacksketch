@@ -1,6 +1,18 @@
 # Changelog
 
-## Unreleased: the form builder (phase 2)
+## Unreleased: the form builder (phase 2) and the API contract (phase 3)
+
+### API contract
+
+- **API contract**, a new module for designing the endpoints both sides agree on: method, path, path and query params, a JSON request body, and a response per status code (including `default`). Endpoints are grouped by resource.
+- Bodies, responses and params are shared-schema types that every endpoint reuses. Edit a type's fields, rename it everywhere at once, and see what uses it before deleting it.
+- **From the API explorer**: add the explorer's response as an endpoint. Its URL is split into base URL, path and query params, matching types are reused and clashing ones renamed.
+- **OpenAPI 3.1 export** (YAML or JSON) and **OpenAPI 3.0 / 3.1 import**, read locally. The import understands `$ref`, `allOf`, `oneOf`/`anyOf` and both ways of writing nullable, names inline objects from where they sit, and lists what it had to simplify or leave out.
+- **Typed client**: a `fetch` function per endpoint with typed path params, query params and **request body**, and a Zod-checked (or cast) return type. Error statuses throw `ApiError` with the status and body. It ships with the contract's TypeScript types and Zod schemas. The tests compile all three together under strict `tsc` (`exactOptionalPropertyTypes` included) and call the client against a stubbed `fetch` with real Zod.
+- Problems (duplicate routes, object query params, a body on a GET, a type that's gone) are listed and marked; those parts are left out of the output until they're fixed.
+- Zod output declares recursive types (a category holding its subcategories) with getters, the way Zod 4 expects.
+
+### Form builder
 
 - **Form builder**, a new module. Drag text, paragraph, number, dropdown, radio, checkbox, date and file fields onto a form, reorder them by mouse, touch or keyboard, and group them into sections and steps.
 - **New form from a type**: pick a type from the API explorer and its fields come in with their types and required-ness; nested objects become sections. What's left out (lists, mixed types, `id`, `createdAt`) is listed with the reason.

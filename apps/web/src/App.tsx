@@ -10,6 +10,7 @@ import { useUi } from '@/store/ui'
 
 // drag and drop only loads when the form builder opens
 const FormBuilder = lazy(() => import('@/modules/form-builder/FormBuilder'))
+const ContractDesigner = lazy(() => import('@/modules/contract/ContractDesigner'))
 
 function CurrentModule() {
   const module = useUi((s) => moduleById(s.module))
@@ -18,6 +19,12 @@ function CurrentModule() {
     return (
       <Suspense fallback={<div className="paper-grid h-full" />}>
         <FormBuilder />
+      </Suspense>
+    )
+  if (module.id === 'contract')
+    return (
+      <Suspense fallback={<div className="paper-grid h-full" />}>
+        <ContractDesigner />
       </Suspense>
     )
   return <Planned key={module.id} module={module} />

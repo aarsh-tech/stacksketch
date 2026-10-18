@@ -2,11 +2,11 @@
 
 **One local workbench for the contract between frontend and backend.**
 
-Paste an API response and get TypeScript types, a Zod, Valibot or Yup schema, realistic mock data, a typed fetch, Axios or TanStack Query client, JSON Schema, Pydantic models and Go structs in one go. The form builder turns any of those types into a form with validation and conditional fields. Later phases add an API contract designer, a mock API server and a browser extension for pixel-perfect QA, all reading the same shared schema.
+Paste an API response and get TypeScript types, a Zod, Valibot or Yup schema, realistic mock data, a typed fetch, Axios or TanStack Query client, JSON Schema, Pydantic models and Go structs in one go. The form builder turns any of those types into a form with validation and conditional fields, and the API contract designer puts them on endpoints and exports OpenAPI 3.1 and a typed client. Later phases add a mock API server and a browser extension for pixel-perfect QA, all reading the same shared schema.
 
 Free, open source, no account, no backend. Everything runs in your browser and nothing you paste is uploaded.
 
-> Status: **v0.1.0, phase 1** (API explorer), with phase 2 (the form builder) built and waiting for its release. See [CHANGELOG.md](CHANGELOG.md) for what's in it and [ROADMAP.md](ROADMAP.md) for what's next.
+> Status: **v0.1.0, phase 1** (API explorer), with phase 2 (the form builder) and the first half of phase 3 (the API contract designer) built and waiting for their release. See [CHANGELOG.md](CHANGELOG.md) for what's in it and [ROADMAP.md](ROADMAP.md) for what's next.
 
 ![Pasting a response, flipping through the outputs, picking a type on the graph and turning a field into an enum](docs/screenshots/demo.gif)
 
@@ -48,6 +48,16 @@ Free, open source, no account, no backend. Everything runs in your browser and n
 - **Preview**: switch the canvas to Preview and fill the form in. It validates with the exact schema you'd export, walks through the steps, shows and hides conditional fields, and shows the values `onSubmit` would get.
 - Problems are marked on the form (a duplicate key, a regex that doesn't compile, a condition on a field that's gone), and the code leaves those parts out until they're fixed, so it always compiles.
 - Several forms, kept in your browser. Delete a field or a form and undo it from the toast.
+
+### API contract
+
+- **Endpoints**: method, path (`/orders/{orderId}` or `/orders/:orderId`), summary, description, path and query params, a JSON request body and a response per status code, including `default` for "any other status". Endpoints are grouped by resource (the OpenAPI tag).
+- **Shared types**: bodies, responses and params point at the contract's types, so one `Order` serves every endpoint. Edit a type's fields (any value kind, a format, an enum, another type, a list, nullable, optional), rename it everywhere at once, and see what uses it before you delete it.
+- **From the API explorer**: add the explorer's response (with your schema edits) as an endpoint. The URL is split into the base URL, the path and query params; types that are already in the contract are reused, and different ones with the same name are renamed.
+- **OpenAPI 3.1 export** as YAML or JSON, with every type under `components/schemas`.
+- **OpenAPI import**: open or paste an OpenAPI 3.0 or 3.1 file, YAML or JSON. Object schemas become types (inline ones are named from where they sit, like `CreateOrderBody`), `$ref`s, `allOf`, `oneOf`/`anyOf`, `nullable` and `type: [x, "null"]` are understood, and anything the shared schema can't hold yet (header params, maps, non-JSON bodies) is listed in plain words. It's read in your browser and you can undo it.
+- **Typed client**: one `fetch` function per endpoint with path params as arguments, query params as an object, a **typed request body**, and the success response as the return type, checked with Zod (or cast). Error statuses throw an `ApiError` with the status and body. It comes with the contract's TypeScript types and Zod schemas (recursive types included), and compiles under strict `tsc`.
+- Problems are listed and marked in the list (a duplicate route, a query param that's an object, a body on a GET, a type that's gone); those parts are left out of the code until they're fixed, so the code always compiles.
 
 ## Run it locally
 

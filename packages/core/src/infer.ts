@@ -224,3 +224,29 @@ export function typesTopDown(schema: Schema): ObjectType[] {
   }
   return out
 }
+
+/**
+ * Types with the ones they use first, so generated declarations never point
+ * forward, except around a cycle (a type that holds itself, directly or not).
+ * Order is otherwise kept.
+ */
+export function typesInDependencyOrder(types: ObjectType[]): ObjectType[] {
+  const byName = new Map(types.map((t) => [t.name, t]))
+  const done = new Set<string>()
+  const visiting = new Set<string>()
+  const out: ObjectType[] = []
+  const visit = (type: ObjectType) => {
+    if (done.has(type.name) || visiting.has(type.name)) return
+    visiting.add(type.name)
+    for (const f of type.fields)
+      for (const name of refsOf(f.shape)) {
+        const dep = byName.get(name)
+        if (dep) visit(dep)
+      }
+    visiting.delete(type.name)
+    done.add(type.name)
+    out.push(type)
+  }
+  types.forEach(visit)
+  return out
+}

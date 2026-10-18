@@ -67,12 +67,13 @@ Every module reads and writes the shared schema in `packages/core/src/types.ts`.
 
 ## Phase 3: API contract and mock server (v0.3), backend developers join
 
-### - [ ] 8. API contract designer
+### - [x] 8. API contract designer
 
 - Endpoints with method, path, path/query params, request body, responses per status code, error shapes. Bodies are shared-schema types.
 - Group endpoints by resource; reuse types across endpoints.
 - Export and import OpenAPI 3.1 (`packages/core/src/openapi/`).
 - Generated fetch functions get typed request bodies.
+- Done: the contract model lives in `packages/core/src/contract/` (`Contract` holds shared-schema `ObjectType`s and endpoints whose params, bodies and responses are `Shape`s), with `toOpenApi` / `fromOpenApi` (3.0 and 3.1) in `packages/core/src/openapi/`. `toContractClient` writes a typed fetch client with typed request bodies; its tests type-check it with its types and Zod schemas under strict `tsc` and run it against a stubbed `fetch`. The module is `apps/web/src/modules/contract/`; the explorer's response can be added as an endpoint.
 
 ### - [ ] 9. Mock API server (`packages/cli`)
 
