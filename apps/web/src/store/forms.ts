@@ -5,7 +5,9 @@ import { emptyForm } from '@stacksketch/core'
 import type { Form } from '@stacksketch/core'
 import { sampleForm } from '@/lib/sampleForm'
 
-export type FormPanel = 'settings' | 'code'
+export type FormPanel = 'settings' | 'zod' | 'react'
+/** the canvas: build the form, or fill it in */
+export type FormView = 'edit' | 'preview'
 export type FormMobilePane = 'add' | 'canvas' | 'panel'
 
 interface FormsState {
@@ -14,8 +16,9 @@ interface FormsState {
   /** the item open in the settings panel; null shows the form's own settings */
   selected: string | null
   panel: FormPanel
+  view: FormView
   mobilePane: FormMobilePane
-  set: (patch: Partial<Pick<FormsState, 'activeForm' | 'selected' | 'panel' | 'mobilePane'>>) => void
+  set: (patch: Partial<Pick<FormsState, 'activeForm' | 'selected' | 'panel' | 'view' | 'mobilePane'>>) => void
   /** change the open form */
   update: (change: (form: Form) => Form) => void
   /** add a form and open it */
@@ -34,6 +37,7 @@ export const useForms = create<FormsState>()(
       activeForm: 'f1',
       selected: null,
       panel: 'settings',
+      view: 'edit',
       mobilePane: 'canvas',
       set: (patch) => set(patch),
       update: (change) => set((s) => ({ forms: s.forms.map((f) => (f.id === s.activeForm ? change(f) : f)) })),
@@ -55,7 +59,16 @@ export const useForms = create<FormsState>()(
           return { forms, activeForm: form.id, selected: null }
         }),
     }),
-    { name: 'stacksketch:forms', version: 1 },
+    {
+      name: 'stacksketch:forms',
+      version: 2,
+      // 2: the code tab became two (Zod and React), and the canvas got a preview
+      migrate: (persisted, version) => {
+        const next: Record<string, unknown> = { view: 'edit', ...((persisted ?? {}) as Record<string, unknown>) }
+        if (version < 2 && next.panel === 'code') next.panel = 'zod'
+        return next as unknown as FormsState
+      },
+    },
   ),
 )
 

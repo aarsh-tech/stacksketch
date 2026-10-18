@@ -2,8 +2,13 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { z } from 'zod'
 
 import {
+  FORM_ZOD_FUNCTIONS,
+  blankValues,
   createField,
   emptyForm,
+  fieldShown,
+  formFileNames,
+  formZodRuntime,
   formFromSchema,
   formProblems,
   formToSchema,
@@ -15,6 +20,7 @@ import {
   messagesOf,
   regexLiteral,
   renameKey,
+  toFormComponent,
   toFormZod,
   toTypeScript,
   toZod,
@@ -277,6 +283,8 @@ describe('zod', () => {
     expect(errors(schema, noGst)).toEqual({ gstNumber: 'Enter GST number' })
     expect(errors(schema, { ...noGst, businessType: 'individual' })).toEqual({})
     expect(errors(schema, { businessType: 'company', address: {} })).toMatchObject({ fullName: 'Enter full name', gstNumber: 'Enter GST number' })
+    // including a non-whole number, which Zod's own .int() would abort on
+    expect(errors(schema, { ...noGst, age: 32.5 })).toEqual({ age: 'Enter a whole number', gstNumber: 'Enter GST number' })
     // when it shows and is filled in, its own rules still apply
     expect(errors(schema, { ...valid, gstNumber: 'nope' })).toEqual({ gstNumber: 'Check the format of GST number' })
     // and the checks don't crash on something that isn't a form at all
@@ -390,5 +398,115 @@ describe('from a schema', () => {
 
   it('makes a form whose schema compiles', () => {
     expect(typecheck({ 'package.json': '{"type":"module"}', 'schema.ts': toFormZod(order) })).toEqual([])
+  })
+})
+
+describe('react component', () => {
+  /** the settings a fresh `pnpm create vite --template react-ts` app type-checks with */
+  const vite = { noUnusedLocals: true, noUnusedParameters: true, verbatimModuleSyntax: true, erasableSyntaxOnly: true, noFallthroughCasesInSwitch: true }
+  const compile = (f: Form) => {
+    const names = formFileNames(f)
+    const app = `import { ${toFormComponentName(f)} } from './${names.component.replace(/\.tsx$/, '')}'\n\nexport const App = () => <${toFormComponentName(f)} onSubmit={(values) => console.log(values)} />\n`
+    return typecheck({ 'package.json': '{"type":"module"}', [names.schema]: toFormZod(f), [names.component]: toFormComponent(f), 'App.tsx': app }, vite)
+  }
+  const toFormComponentName = (f: Form) => formFileNames(f).component.replace(/\.tsx$/, '')
+
+  it('compiles with its schema under a fresh Vite app’s settings', () => {
+    expect(compile(signup)).toEqual([])
+  }, 60_000)
+
+  it('compiles one-step forms, empty forms, every condition and forms with problems', () => {
+    const conditions = form(
+      [
+        field('checkbox', 'subscribe', { required: false }),
+        field('number', 'qty', { required: false }),
+        field('file', 'cv', { required: false, multiple: true, accept: '.pdf' }),
+        field('text', 'freq', { showWhen: { field: 'subscribe', op: 'equals', value: 'true' } }),
+        field('text', 'bulk', { showWhen: { field: 'qty', op: 'equals', value: '100' } }),
+        field('checkbox', 'noCv', { showWhen: { field: 'cv', op: 'empty' } }),
+        field('select', 'size', { options: [{ value: "it's", label: 'Quote " and {brace} & <tag>' }], placeholder: 'Pick "one"' }),
+      ],
+      'ConditionsForm',
+    )
+    const broken = form([field('text', 'email'), field('text', 'email'), field('text', '1st'), field('select', 'none', { options: [] })], 'BrokenForm')
+    const onlySteps = form([{ kind: 'step', id: 's1', title: 'One' }, { kind: 'step', id: 's2', title: 'Two' }], 'EmptyForm')
+    for (const f of [conditions, broken, form([], 'BlankForm'), onlySteps, form([field('radio', 'pick', { options: [{ value: 'a', label: 'A' }] })], 'Field')])
+      expect(compile(f), f.name).toEqual([])
+  }, 60_000)
+
+  it('walks through steps, checks each one, and hides conditional fields', () => {
+    const code = toFormComponent(signup)
+    expect(code).toContain(`{ title: 'About you', fields: ['fullName', 'email', 'website', 'age'] },`)
+    expect(code).toContain(`const showGstNumber = values.businessType === 'company'`)
+    expect(code).toContain(`await trigger(fields, { shouldFocus: true })`)
+    expect(code).toContain(`{...register('age', { valueAsNumber: true })}`)
+    expect(code).toContain(`import { signupFormSchema } from './signupForm.schema'`)
+    // a form without steps has no step logic at all
+    const single = toFormComponent(form([field('text', 'name')], 'NameForm'))
+    expect(single).not.toContain('STEPS')
+    expect(single).toContain('onSubmit={handleSubmit(onSubmit)}')
+  })
+
+  it('keeps clear of its own helpers’ names', () => {
+    expect(formFileNames(form([], 'Field')).component).toBe('FieldForm.tsx')
+    expect(formFileNames(signup)).toEqual({ schema: 'signupForm.schema.ts', component: 'SignupForm.tsx' })
+  })
+})
+
+describe('preview helpers', () => {
+  it('reads empty inputs as not filled in', () => {
+    const files = new FakeFileList([])
+    expect(blankValues({ a: '', b: null, c: Number.NaN, d: 0, e: false, f: { g: '' }, files })).toEqual({ a: undefined, b: undefined, c: undefined, d: 0, e: false, f: { g: undefined }, files })
+  })
+
+  it('runs the same schema as the exported code', () => {
+    const real = globalThis.FileList
+    ;(globalThis as Record<string, unknown>).FileList = FakeFileList
+    try {
+      const runtime = new Function('z', formZodRuntime(signup))(z) as z.ZodType
+      const exported = evalForm(toFormZod(signup), 'signupFormSchema')
+      for (const value of [valid, { address: {} }, { ...valid, gstNumber: undefined }, { ...valid, logo: new FakeFileList([5 * 1024 * 1024]) }, null])
+        expect(errors(runtime, value)).toEqual(errors(exported, value))
+    } finally {
+      ;(globalThis as Record<string, unknown>).FileList = real
+    }
+  })
+
+  it('calls no Zod function the preview doesn’t hand over', () => {
+    const every = form([
+      ...signup.items,
+      field('number', 'qty', { required: false }),
+      field('checkbox', 'subscribe', { required: false }),
+      field('select', 'size', { options: [{ value: 's', label: 'S' }], required: false }),
+      field('text', 'freq', { showWhen: { field: 'subscribe', op: 'equals', value: 'true' } }),
+    ])
+    const used = new Set([...formZodRuntime(every).matchAll(/\bz\.(\w+)/g)].map((m) => m[1]))
+    expect([...used].sort()).toEqual([...FORM_ZOD_FUNCTIONS])
+  })
+
+  it('decides what shows the way the generated schema does', () => {
+    const gst = signup.items.find((i) => i.kind === 'field' && i.key === 'gstNumber') as FormField
+    expect(fieldShown(signup, gst, { businessType: 'company' })).toBe(true)
+    expect(fieldShown(signup, gst, { businessType: 'individual' })).toBe(false)
+    expect(fieldShown(signup, gst, {})).toBe(false)
+
+    const subscribe = field('checkbox', 'subscribe', { required: false })
+    const qty = field('number', 'qty', { required: false })
+    const cv = field('file', 'cv', { required: false })
+    const shows = (showWhen: FormField['showWhen'], values: unknown) => {
+      const target = field('text', 'x', { showWhen })
+      return fieldShown(form([subscribe, qty, cv, target]), target, values)
+    }
+    expect(shows({ field: 'subscribe', op: 'equals', value: 'true' }, { subscribe: true })).toBe(true)
+    expect(shows({ field: 'subscribe', op: 'equals', value: 'false' }, { subscribe: undefined })).toBe(true)
+    expect(shows({ field: 'subscribe', op: 'not-equals', value: 'true' }, { subscribe: true })).toBe(false)
+    expect(shows({ field: 'qty', op: 'equals', value: '100' }, { qty: 100 })).toBe(true)
+    expect(shows({ field: 'qty', op: 'not-equals', value: '100' }, { qty: 100 })).toBe(false)
+    expect(shows({ field: 'qty', op: 'filled' }, { qty: 0 })).toBe(true)
+    expect(shows({ field: 'qty', op: 'empty' }, {})).toBe(true)
+    expect(shows({ field: 'cv', op: 'filled' }, { cv: new FakeFileList([]) })).toBe(false)
+    expect(shows({ field: 'cv', op: 'empty' }, { cv: new FakeFileList([1]) })).toBe(false)
+    // a condition the code leaves out never hides the field
+    expect(shows({ field: 'gone', op: 'filled' }, {})).toBe(true)
   })
 })

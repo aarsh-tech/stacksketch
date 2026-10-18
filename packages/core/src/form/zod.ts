@@ -13,6 +13,9 @@ export function regexLiteral(pattern: string): string {
   for (const ch of pattern) {
     if (ch === '\n') out += '\\n'
     else if (ch === '\r') out += '\\r'
+    // line and paragraph separators end a line in JavaScript, so a literal can't hold them
+    else if (ch === ' ') out += '\\u2028'
+    else if (ch === ' ') out += '\\u2029'
     else if (ch === '/' && !escaped) out += '\\/'
     else out += ch
     escaped = ch === '\\' && !escaped
@@ -20,12 +23,15 @@ export function regexLiteral(pattern: string): string {
   return `/${out}/`
 }
 
+/** Every `z.` function form schemas call, so a runtime can hand over just these (the preview does, to stay small). */
+export const FORM_ZOD_FUNCTIONS = ['boolean', 'custom', 'email', 'enum', 'iso', 'literal', 'number', 'object', 'string', 'url'] as const
+
 /** The name of the inferred values type: `SignupForm` → `SignupFormValues`. */
 export const formValuesName = (form: Form) => `${pascalCase(form.name)}Values`
 export const formSchemaName = (form: Form) => schemaName(pascalCase(form.name))
 
 /** `buyer.type` → `data.buyer?.type`: the checks run on half-filled forms, so nothing is assumed to exist. */
-const access = (key: string) => `data.${key.split('.').join('?.')}`
+const access = (key: string, base = 'data') => `${base}.${key.split('.').join('?.')}`
 
 /** True when the field has a value, as code. */
 function filled(field: FormField, at: string): string {
@@ -40,14 +46,14 @@ function empty(field: FormField, at: string): string {
   return `${at} === undefined`
 }
 
-function literal(source: FormField, value: string): string {
+function literal(source: FormField, value: string, quote = str): string {
   if (source.widget === 'number') return String(Number(value))
-  return str(value)
+  return quote(value)
 }
 
-/** The condition under which a field shows, as code. */
-function shownWhen(c: Condition, source: FormField): string {
-  const at = access(c.field)
+/** The condition under which a field shows, as code reading the values from `base` and quoting strings with `quote`. */
+export function shownWhen(c: Condition, source: FormField, base = 'data', quote = str): string {
+  const at = access(c.field, base)
   switch (c.op) {
     case 'filled':
       return filled(source, at)
@@ -58,7 +64,7 @@ function shownWhen(c: Condition, source: FormField): string {
       const is = c.op === 'equals'
       // checkboxes compare against true only, so a required (always-true) checkbox still type-checks
       if (source.widget === 'checkbox') return (c.value === 'true') === is ? `${at} === true` : `${at} !== true`
-      return `${at} ${is ? '===' : '!=='} ${literal(source, c.value ?? '')}`
+      return `${at} ${is ? '===' : '!=='} ${literal(source, c.value ?? '', quote)}`
     }
   }
 }
@@ -100,7 +106,8 @@ function fieldZod(field: FormField, required: boolean): string {
     }
     case 'number':
       base = required ? `z.number({ error: ${str(m.required)} })` : 'z.number()'
-      if (field.integer) chain.push(`.int(${str(m.format)})`)
+      // not .int(): its issue aborts the whole parse, so "required when shown" checks on other fields would be skipped
+      if (field.integer) chain.push(`.refine(Number.isInteger, ${str(m.format)})`)
       if (min !== undefined) chain.push(`.min(${min}, ${str(m.min)})`)
       if (max !== undefined) chain.push(`.max(${max}, ${str(m.max)})`)
       break
@@ -138,6 +145,36 @@ function objectZod(nodes: ValueNode[], depth: number, conditional: Set<string>):
   return `z.object({\n${lines.join('\n')}\n${'  '.repeat(depth)}})`
 }
 
+/** The helpers and the schema expression, typed for TypeScript or as plain JavaScript. */
+function schemaParts(form: Form, typescript: boolean): { helpers: string[]; body: string } {
+  const fields = usableFields(form)
+  const byKey = new Map(fields.map((f) => [f.key, f]))
+  const conditions = fields.flatMap((f) => {
+    const c = usableCondition(form, f)
+    return c ? [{ field: f, condition: c, source: byKey.get(c.field)! }] : []
+  })
+  const conditional = new Set(conditions.map((c) => c.field.id))
+
+  const helpers: string[] = []
+  if (fields.some((f) => f.widget === 'file'))
+    helpers.push(
+      `/** What a file input holds. Checked without \`instanceof FileList\` at the top level, so the schema also loads where FileList doesn't exist. */\nconst fileList = (${typescript ? 'message?: string' : 'message'}) =>\n  z.custom${typescript ? '<FileList>' : ''}((value) => typeof FileList !== 'undefined' && value instanceof FileList, message)`,
+    )
+  const checks = conditions.filter((c) => c.field.required)
+  if (checks.length)
+    helpers.push(
+      `/** Run the "required when shown" checks even while other fields still have errors. */\nconst isObject = (${typescript ? '{ value }: { value: unknown }' : '{ value }'}) => typeof value === 'object' && value !== null`,
+    )
+
+  let body = objectZod(valueTree(fields), 0, conditional)
+  for (const { field, condition, source } of checks) {
+    const message = messagesOf(field).required
+    const path = `[${field.key.split('.').map(str).join(', ')}]`
+    body += `.refine((data) => ${hiddenWhen(condition, source)} || ${filled(field, access(field.key))}, {\n  path: ${path},\n  message: ${str(message)},\n  when: isObject,\n})`
+  }
+  return { helpers, body }
+}
+
 /**
  * A Zod 4 schema for the values the form submits, with each field's rules
  * and messages. A value the user didn't fill in is `undefined`, so the form
@@ -146,30 +183,18 @@ function objectZod(nodes: ValueNode[], depth: number, conditional: Set<string>):
  * they're shown.
  */
 export function toFormZod(form: Form): string {
-  const fields = usableFields(form)
-  const byKey = new Map(fields.map((f) => [f.key, f]))
-  const conditions = fields.flatMap((f) => {
-    const c = usableCondition(form, f)
-    return c ? [{ field: f, condition: c, source: byKey.get(c.field)! }] : []
-  })
-  const conditional = new Set(conditions.map((c) => c.field.id))
   const name = formSchemaName(form)
-
-  const blocks: string[] = [`import { z } from 'zod'`]
-  if (fields.some((f) => f.widget === 'file'))
-    blocks.push(
-      `/** What a file input holds. Checked without \`instanceof FileList\` at the top level, so the schema also loads where FileList doesn't exist. */\nconst fileList = (message?: string) =>\n  z.custom<FileList>((value) => typeof FileList !== 'undefined' && value instanceof FileList, message)`,
-    )
-  const checks = conditions.filter((c) => c.field.required)
-  if (checks.length)
-    blocks.push(`/** Run the "required when shown" checks even while other fields still have errors. */\nconst isObject = ({ value }: { value: unknown }) => typeof value === 'object' && value !== null`)
-
-  let body = objectZod(valueTree(fields), 0, conditional)
-  for (const { field, condition, source } of checks) {
-    const message = messagesOf(field).required
-    const path = `[${field.key.split('.').map(str).join(', ')}]`
-    body += `.refine((data) => ${hiddenWhen(condition, source)} || ${filled(field, access(field.key))}, {\n  path: ${path},\n  message: ${str(message)},\n  when: isObject,\n})`
-  }
-  blocks.push(`export const ${name} = ${body}\n\nexport type ${formValuesName(form)} = z.infer<typeof ${name}>`)
+  const { helpers, body } = schemaParts(form, true)
+  const blocks = [`import { z } from 'zod'`, ...helpers, `export const ${name} = ${body}\n\nexport type ${formValuesName(form)} = z.infer<typeof ${name}>`]
   return blocks.join('\n\n') + '\n'
+}
+
+/**
+ * The same schema as the body of a plain JavaScript function of `z` that
+ * returns it, so the builder's preview validates with exactly the code it
+ * exports: `new Function('z', formZodRuntime(form))(z)`.
+ */
+export function formZodRuntime(form: Form): string {
+  const { helpers, body } = schemaParts(form, false)
+  return [...helpers, `return ${body}`].join('\n\n') + '\n'
 }

@@ -28,7 +28,7 @@ apps/web/                         the workbench (Vite 8, React 19, Tailwind 4, Z
   src/modules/Planned.tsx         page for modules that aren't built yet
   src/components/CodeView.tsx     read-only highlighted code (CodeMirror), shared by the modules
   src/modules/api-explorer/       phase 1: ApiExplorer.tsx (three panes), StructureTree.tsx
-  src/modules/form-builder/       phase 2: FormBuilder.tsx (dnd-kit context, three panes), Palette, Canvas, Inspector, FromSchemaDialog; lazy-loaded
+  src/modules/form-builder/       phase 2: FormBuilder.tsx (dnd-kit context, three panes), Palette, Canvas, Inspector, FromSchemaDialog, Preview (RHF + Zod, its own lazy chunk); lazy-loaded
   src/store/ui.ts                 theme + current module (persisted: stacksketch:ui)
   src/store/explorer.ts           API explorer input and options (persisted: stacksketch:explorer)
   src/store/forms.ts              form builder forms and selection (persisted: stacksketch:forms)
@@ -39,7 +39,7 @@ packages/core/                    @stacksketch/core: pure TypeScript, no DOM, no
   src/names.ts                    PascalCase, singular, item names, safe property keys
   src/parse.ts                    JSON.parse with line/column and plain-English errors
   src/generate/                   typescript, zod, mock, fetch, jsonSchema: one pure function each
-  src/form/                       the form model (types, model), formFromSchema, toFormZod, formToSchema
+  src/form/                       the form model (types, model), formFromSchema, toFormZod (+ formZodRuntime for the preview), toFormComponent (react.ts), formToSchema
   src/core.test.ts                Vitest; the Zod tests eval the generated code against real zod
   src/form.test.ts                form model and generator tests; typecheck.testutil.ts runs strict tsc on generated code
 ```

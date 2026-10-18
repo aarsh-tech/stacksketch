@@ -56,11 +56,12 @@ Every module reads and writes the shared schema in `packages/core/src/types.ts`.
 - Conditional visibility ("show GST number only if business type is company").
 - Done: forms live in `packages/core/src/form/` (model, `formFromSchema`, `toFormZod`, `formToSchema`) and the module in `apps/web/src/modules/form-builder/`. A form is a flat list of fields with section and step markers; each field's value maps to a shared-schema `Shape`.
 
-### - [ ] 7. Form code export
+### - [x] 7. Form code export
 
 - React Hook Form + `@hookform/resolvers/zod` + Tailwind, as one component file plus its schema.
 - Live preview you can fill in, with validation messages.
 - Done when the exported code compiles in a fresh Vite app with no edits.
+- Done: `toFormComponent` in `packages/core/src/form/react.ts`; its tests type-check it with its schema under a fresh Vite app's compiler settings. The exported files were also built in a fresh `create-vite` React + TypeScript app with Tailwind, unedited, and filled in there in Chrome. The preview (`Preview.tsx`) runs the exported Zod schema itself (`formZodRuntime`) with the same rules as the component for empty inputs, hidden fields and steps.
 
 ---
 

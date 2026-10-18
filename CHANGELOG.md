@@ -6,6 +6,9 @@
 - **New form from a type**: pick a type from the API explorer and its fields come in with their types and required-ness; nested objects become sections. What's left out (lists, mixed types, `id`, `createdAt`) is listed with the reason.
 - Per-field validation (required, min, max, pattern) with custom messages, and conditional visibility ("show GST number only if business type is company").
 - A Zod 4 schema for the form's values. Its tests run it against real Zod and type-check it under strict `tsc`, including forms with problems still to fix.
+- **React component export**: React Hook Form with the form's Zod schema as its resolver, styled with Tailwind. Multi-step forms check each step before the next and jump back to the first step with an error; fields hidden by their condition drop out of the values. It compiles and runs unedited in a fresh Vite + React + TypeScript app.
+- **Preview**: fill the form in on the canvas, with the exported schema's messages, steps and conditional fields, and see the values `onSubmit` gets.
+- Whole-number fields check with `Number.isInteger` rather than Zod's `.int()`, which stops the parse and hid "required when shown" errors on other fields.
 
 ## v0.1.0: the API explorer (2026-10-18)
 

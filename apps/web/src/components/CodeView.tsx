@@ -10,10 +10,11 @@ import { Decoration, EditorView } from '@codemirror/view'
 import { useResolvedTheme } from '@/hooks/useTheme'
 import { highlight as syntax } from '@/lib/codemirror'
 
-export type CodeLang = 'ts' | 'json' | 'python' | 'go'
+export type CodeLang = 'ts' | 'tsx' | 'json' | 'python' | 'go'
 
 const LANGS: Record<CodeLang, () => ReturnType<typeof json>> = {
   ts: () => javascript({ typescript: true }),
+  tsx: () => javascript({ typescript: true, jsx: true }),
   json: () => json(),
   python: () => python(),
   go: () => go(),

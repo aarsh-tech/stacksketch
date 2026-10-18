@@ -2,8 +2,11 @@
 import { fileURLToPath } from 'node:url'
 import ts from 'typescript'
 
-/** Type-check virtual files with the real compiler, resolving packages from this package's node_modules. */
-export function typecheck(files: Record<string, string>): string[] {
+/**
+ * Type-check virtual files with the real compiler, resolving packages from this package's node_modules.
+ * `extra` options add to the defaults, e.g. the stricter settings of a fresh Vite app.
+ */
+export function typecheck(files: Record<string, string>, extra: ts.CompilerOptions = {}): string[] {
   const dir = fileURLToPath(new URL('./__tsc__/', import.meta.url)).replace(/\\/g, '/')
   const virtual = new Map(Object.entries(files).map(([name, code]) => [dir + name, code]))
   const options: ts.CompilerOptions = {
@@ -15,6 +18,8 @@ export function typecheck(files: Record<string, string>): string[] {
     lib: ['lib.es2022.d.ts', 'lib.dom.d.ts'],
     skipLibCheck: true,
     types: [],
+    jsx: ts.JsxEmit.ReactJSX,
+    ...extra,
   }
   const host = ts.createCompilerHost(options)
   const { getSourceFile, fileExists, readFile } = host

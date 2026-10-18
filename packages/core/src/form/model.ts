@@ -152,6 +152,17 @@ export function layoutOf(form: Form): LayoutStep[] {
   return steps.length ? steps : [{ id: null, title: '', sections: [] }]
 }
 
+/**
+ * The layout the exported component and the preview show: only fields code
+ * can be generated for, and no step left with nothing in it.
+ */
+export function usableLayout(form: Form): LayoutStep[] {
+  const usable = new Set(usableFields(form).map((f) => f.id))
+  return layoutOf(form)
+    .map((step) => ({ ...step, sections: step.sections.map((s) => ({ ...s, fields: s.fields.filter((f) => usable.has(f.id)) })) }))
+    .filter((step) => step.sections.some((s) => s.fields.length || s.title))
+}
+
 /** The step a field is on, counting from 0. */
 export function stepIndexOf(form: Form, itemId: string): number {
   let n = 0
@@ -266,6 +277,51 @@ function conditionProblem(field: FormField, byKey: Map<string, FormField>): stri
 export function usableCondition(form: Form, field: FormField): FormField['showWhen'] {
   const byKey = new Map(usableFields(form).map((f) => [f.key, f]))
   return conditionProblem(field, byKey) ? undefined : field.showWhen
+}
+
+/**
+ * Inputs as the schema reads them: an empty text input holds '', an empty
+ * number NaN and an unpicked radio null, and all of those mean "not filled
+ * in", which the schema expects as undefined. Plain objects are cleaned all
+ * the way down; anything else (a FileList, a Date) is kept as it is.
+ */
+export function blankValues(value: unknown): unknown {
+  if (value === '' || value === null || Number.isNaN(value)) return undefined
+  if (typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype)
+    return Object.fromEntries(Object.entries(value).map(([key, v]) => [key, blankValues(v)]))
+  return value
+}
+
+/** The value at a dotted key: `address.city` reads `values.address?.city`. */
+export function valueAt(values: unknown, key: string): unknown {
+  let at = values
+  for (const part of key.split('.')) at = typeof at === 'object' && at !== null ? (at as Record<string, unknown>)[part] : undefined
+  return at
+}
+
+/**
+ * Whether a field shows, given the values so far (cleaned by `blankValues`),
+ * decided the same way as the generated schema and component. A condition
+ * code can't be generated for is ignored there, so the field shows here too.
+ */
+export function fieldShown(form: Form, field: FormField, values: unknown): boolean {
+  const c = usableCondition(form, field)
+  if (!c) return true
+  const source = usableFields(form).find((f) => f.key === c.field)!
+  const value = valueAt(values, c.field)
+  const isFilled =
+    source.widget === 'checkbox' ? value === true : source.widget === 'file' ? ((value as { length?: number } | undefined)?.length ?? 0) > 0 : value !== undefined
+  switch (c.op) {
+    case 'filled':
+      return isFilled
+    case 'empty':
+      return !isFilled
+    case 'equals':
+    case 'not-equals': {
+      const same = source.widget === 'checkbox' ? (value === true) === (c.value === 'true') : value === (source.widget === 'number' ? Number(c.value) : c.value)
+      return c.op === 'equals' ? same : !same
+    }
+  }
 }
 
 /** A field's value as nested objects, in the order fields first appear: `a`, `b.c`, `b.d` → a, b { c, d }. */

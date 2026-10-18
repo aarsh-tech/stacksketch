@@ -52,9 +52,11 @@ export type {
   Widget,
 } from './form/types'
 export {
+  blankValues,
   createField,
   defaultOptions,
   emptyForm,
+  fieldShown,
   fieldsOf,
   formProblems,
   humanize,
@@ -73,11 +75,14 @@ export {
   updateItem,
   usableCondition,
   usableFields,
+  usableLayout,
+  valueAt,
   valueTree,
   withWidget,
 } from './form/model'
 export type { FormProblem, LayoutSection, LayoutStep, ValueNode } from './form/model'
 export { formFromSchema } from './form/fromSchema'
 export type { SkippedField } from './form/fromSchema'
-export { formSchemaName, formValuesName, regexLiteral, toFormZod } from './form/zod'
+export { FORM_ZOD_FUNCTIONS, formSchemaName, formValuesName, formZodRuntime, regexLiteral, shownWhen, toFormZod } from './form/zod'
 export { formToSchema } from './form/toSchema'
+export { formComponentName, formFileNames, toFormComponent } from './form/react'

@@ -6,7 +6,7 @@ Paste an API response and get TypeScript types, a Zod, Valibot or Yup schema, re
 
 Free, open source, no account, no backend. Everything runs in your browser and nothing you paste is uploaded.
 
-> Status: **v0.1.0, phase 1** (API explorer), with phase 2 (the form builder) under way. See [CHANGELOG.md](CHANGELOG.md) for what's in it and [ROADMAP.md](ROADMAP.md) for what's next.
+> Status: **v0.1.0, phase 1** (API explorer), with phase 2 (the form builder) built and waiting for its release. See [CHANGELOG.md](CHANGELOG.md) for what's in it and [ROADMAP.md](ROADMAP.md) for what's next.
 
 ![Pasting a response, flipping through the outputs, picking a type on the graph and turning a field into an enum](docs/screenshots/demo.gif)
 
@@ -44,6 +44,8 @@ Free, open source, no account, no backend. Everything runs in your browser and n
 - **Validation per field**: required, min and max (characters for text, the value for numbers, megabytes for files), a regex pattern, and your own message for each rule. Default messages are plain English, built from the label ("Enter GST number").
 - **Conditional fields**: show a field only when another one is, isn't, is filled in or is empty ("show GST number only if business type is company"). It's only required while it shows.
 - **Zod schema** for the form's values, with every rule and message. Conditional fields are checked when they show, even while other fields still have errors, so multi-step forms validate step by step.
+- **React component**: a React Hook Form + Zod component styled with Tailwind, next to its schema file. Steps check their own fields before moving on, hidden fields drop out of the values, inputs are labelled and wired to their hints and errors for screen readers, and it builds unedited in a fresh Vite app (`pnpm add react-hook-form @hookform/resolvers zod`).
+- **Preview**: switch the canvas to Preview and fill the form in. It validates with the exact schema you'd export, walks through the steps, shows and hides conditional fields, and shows the values `onSubmit` would get.
 - Problems are marked on the form (a duplicate key, a regex that doesn't compile, a condition on a field that's gone), and the code leaves those parts out until they're fixed, so it always compiles.
 - Several forms, kept in your browser. Delete a field or a form and undo it from the toast.
 
