@@ -103,6 +103,21 @@ export default withStacksketchVariants({ /* your config */ })
 - In the form builder, the canvas's **States** view shows a form empty, filled in with valid sample values, with the errors of submitting it empty, and submitting.
 - Try it on the fixture app: `pnpm --filter @stacksketch/variants fixture`, then open http://localhost:5190/__variants.
 
+### DB to code
+
+- Paste DBML or open a Schemasketch project file (`.schemasketch.json`). Tables, columns, enums, indexes and relationships are read (inline `ref:`, `Ref:` lines and blocks, aliases, composite keys).
+- **Prisma 7** schema for PostgreSQL, MySQL or SQLite: camelCase fields with `@map`, relations on both sides (named when two point at the same table), composite keys, enums and defaults. The tests run every output through Prisma's own validator.
+- **SQL migrations** for PostgreSQL, MySQL and SQLite: enums, tables, keys, indexes and foreign keys. The tests run them on real PostgreSQL (PGlite) and SQLite.
+- **Types**: a shared-schema type per table, plus `New…` and `…Changes` types for creating and updating.
+- **CRUD handlers** for Express or Next.js (App Router), checking bodies with the contract's Zod schemas and using Prisma.
+- **Add to the API contract**: every table becomes a type with list, create, get, update and delete endpoints, ready for the mock server and the typed client.
+
+### API flows
+
+- Chain contract endpoints into a flow (log in → refresh the token → fetch the profile) and see it as a sequence diagram: what each step sends (path, query and body type) and gets back.
+- Show the error path by picking any response a step declares, like a 409; add notes beside steps.
+- Export SVG, or copy Mermaid to paste in a pull request or docs.
+
 ## Run it locally
 
 You need Node 20.19+ and pnpm.

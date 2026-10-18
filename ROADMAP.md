@@ -117,12 +117,14 @@ Every module reads and writes the shared schema in `packages/core/src/types.ts`.
 
 ## Phase 6: Bridges (v0.6)
 
-### - [ ] 14. DB to code, with Schemasketch
+### - [x] 14. DB to code, with Schemasketch
 
 - Import a Schemasketch project file; each table becomes a shared-schema type.
 - Generate Prisma schema, SQL migrations and CRUD endpoint stubs (Express / Next.js route handlers).
+- Done: `packages/core/src/db/` reads DBML and Schemasketch project files (`parseDbml`, `readSchemasketchFile`) and generates shared-schema types, Prisma 7 schemas (validated in the tests by Prisma's own schema engine, for PostgreSQL, MySQL and SQLite), SQL migrations (run in the tests on PGlite and `node:sqlite`), a CRUD contract (`dbCrudContract`, which the module adds to the API contract) and Express and Next.js handlers (type-checked with the contract's Zod schemas). The module is `apps/web/src/modules/db-code/`.
 
-### - [ ] 15. API flows
+### - [x] 15. API flows
 
 - Sequence diagrams built from contract endpoints (login → refresh token → fetch profile), with the data each step sends.
 - Export SVG and Mermaid.
+- Done: `packages/core/src/flows/flow.ts` (`flowSequence`, `toMermaid`, `toSequenceSvg`) and the module in `apps/web/src/modules/flows/`. Each step is a contract endpoint and the response it shows (the success one, or an error to draw the failure path), with an optional note.

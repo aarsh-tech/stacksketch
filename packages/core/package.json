@@ -14,11 +14,15 @@
     "test:watch": "vitest"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.10",
     "@hookform/resolvers": "^5.9.2",
+    "@prisma/prisma-schema-wasm": "8.1.0-2.59be4fda12412a79eeb9c2ae727b6aa723593323",
     "@tanstack/react-query": "^5.104.4",
+    "@types/express": "^5.0.6",
     "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",
     "axios": "^1.20.0",
+    "express": "^5.3.0",
     "react": "^19.3.1",
     "react-hook-form": "^7.90.0",
     "typescript": "~6.0.2",

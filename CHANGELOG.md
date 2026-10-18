@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased: bridges (phase 6)
+
+- **DB to code**: read DBML or a Schemasketch project file and get shared-schema types, a Prisma 7 schema (PostgreSQL, MySQL, SQLite), SQL migrations for the same three, and CRUD handlers for Express or Next.js. One click adds every table to the API contract with CRUD endpoints.
+- The tests check the output with the real tools: Prisma's schema engine, PostgreSQL (PGlite) and SQLite run the migrations, and the handlers type-check with the contract's Zod schemas.
+- **API flows**: sequence diagrams built from contract endpoints, with the data each step sends and gets back, error paths and notes, exported as SVG or Mermaid.
+
 ## Unreleased: the variant canvas (phase 5)
 
 - **`@stacksketch/variants`**: a Vite plugin and a Next.js config wrapper that serve `/__variants`, with every exported component rendered as a grid of its prop combinations per theme. Props are read from TypeScript; enum and boolean props become rows and columns, the rest get controls.

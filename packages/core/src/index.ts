@@ -135,3 +135,11 @@ export type { Gap, QaComment, QaReportInput, TypeCheck } from './inspect/qa'
 export { axisProps, cellCount, defaultArgs, defaultAxes, variantGrid } from './variants/grid'
 export type { Axis, ComponentInfo, Grid, PropInfo, PropType } from './variants/grid'
 export { sampleFormValues } from './form/sample'
+
+export { parseDbml, readSchemasketchFile } from './db/dbml'
+export type { DbColumn, DbDefault, DbEnum, DbIndex, DbModel, DbRef, DbRefKind, DbTable, DbmlResult } from './db/dbml'
+export { dbCrudContract, dbProblems, dbToSchema, modelName, tablesToTypes, toExpressRoutes, toNextRoutes, toPrisma, toSqlMigration } from './db/generate'
+export type { PrismaProvider, SqlDialect } from './db/generate'
+
+export { flowSequence, LIGHT_PALETTE, requestText, responseText, starterFlow, stepStatuses, toMermaid, toSequenceSvg } from './flows/flow'
+export type { Flow, FlowStep, Sequence, SequenceMessage, SvgPalette } from './flows/flow'

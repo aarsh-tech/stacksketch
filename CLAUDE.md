@@ -48,6 +48,9 @@ apps/extension/                   phase 4: Chrome MV3. src/content.ts (shadow-ro
   src/inspect/ (in core)          stackingReasons, stackingTree, compareStacking, gapBetween, checkType, qaReport
 packages/variants/                phase 5: props.ts (TypeScript compiler reads components and props), vite.ts (plugin, /__variants), next.ts (writes a dev-only page), canvas.tsx + mount.tsx (React grid); built by build.mjs; fixture/ is a demo app
   src/variants/grid.ts (in core)  defaultAxes, defaultArgs, variantGrid; src/form/sample.ts sampleFormValues for the form states view
+  src/db/ (in core)               dbml.ts (parseDbml, readSchemasketchFile), generate.ts (tablesToTypes, toPrisma, toSqlMigration, dbCrudContract, toExpressRoutes, toNextRoutes)
+  src/flows/ (in core)            flowSequence, toMermaid, toSequenceSvg
+  apps/web modules                db-code/DbCode.tsx (store: stacksketch:db), flows/Flows.tsx (store: stacksketch:flows)
 packages/cli/                     `stacksketch mock <file>`: Node http wrapper around createMockApi, bundled by esbuild (build.mjs) into dist/cli.js
   src/form/                       the form model (types, model), formFromSchema, toFormZod (+ formZodRuntime for the preview), toFormComponent (react.ts), formToSchema
   src/core.test.ts                Vitest; the Zod tests eval the generated code against real zod
@@ -65,7 +68,7 @@ packages/cli/                     `stacksketch mock <file>`: Node http wrapper a
 - **Nothing leaves the browser.** No analytics, no remote fetches of user data, no "fetch this URL" feature that sends requests from the app. Imports read local files or pasted text.
 - **Heavy libraries are lazy-loaded** with dynamic `import()`. Keep the main bundle small.
 - **Never call setState inside an effect.** oxlint flags it. Derive values during render, or remount with a `key`.
-- **Persisted shapes** (`stacksketch:ui`, `stacksketch:explorer`, `stacksketch:forms`, `stacksketch:contract`): when you change one, bump the persist `version` and add a `migrate`.
+- **Persisted shapes** (`stacksketch:ui`, `stacksketch:explorer`, `stacksketch:forms`, `stacksketch:contract`, `stacksketch:db`, `stacksketch:flows`): when you change one, bump the persist `version` and add a `migrate`.
 - **Adding a module**: set `ready: true` in `modules/registry.ts`, put it in `src/modules/<id>/`, and route it in `App.tsx`.
 
 ## UI conventions
