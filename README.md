@@ -2,11 +2,17 @@
 
 **One local workbench for the contract between frontend and backend.**
 
-Paste an API response and get TypeScript types, Zod schemas, realistic mock data, a typed fetch function and JSON Schema in one go. Later phases add a form builder, an API contract designer, a mock API server and a browser extension for pixel-perfect QA, all reading the same shared schema.
+Paste an API response and get TypeScript types, a Zod, Valibot or Yup schema, realistic mock data, a typed fetch, Axios or TanStack Query client, JSON Schema, Pydantic models and Go structs in one go. Later phases add a form builder, an API contract designer, a mock API server and a browser extension for pixel-perfect QA, all reading the same shared schema.
 
 Free, open source, no account, no backend. Everything runs in your browser and nothing you paste is uploaded.
 
-> Status: **phase 1** (API explorer). See [ROADMAP.md](ROADMAP.md) for what's next.
+> Status: **v0.1.0, phase 1** (API explorer). See [CHANGELOG.md](CHANGELOG.md) for what's in it and [ROADMAP.md](ROADMAP.md) for what's next.
+
+![Pasting a response, flipping through the outputs, picking a type on the graph and turning a field into an enum](docs/screenshots/demo.gif)
+
+| Light, editing a field | Dark, graph view | Phone |
+| --- | --- | --- |
+| ![The API explorer in light mode: the response, the structure tree with a field editor open, and the Zod schema](docs/screenshots/explorer-light.png) | ![The API explorer in dark mode: the schema as a graph with the Buyer type highlighted in the TypeScript output](docs/screenshots/explorer-dark-graph.png) | ![The structure tree at phone width in dark mode](docs/screenshots/explorer-phone.png) |
 
 ## What works today
 

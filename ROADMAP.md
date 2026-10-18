@@ -42,6 +42,7 @@ Every module reads and writes the shared schema in `packages/core/src/types.ts`.
 
 - Deploy to Netlify (`netlify.toml` is ready). Add screenshots and a short GIF to the README.
 - Publish the repo, tag `v0.1.0`, write the release notes.
+- Status: screenshots, GIF, release notes ([CHANGELOG.md](CHANGELOG.md)) and the `v0.1.0` tag are done. Still to do: deploy to Netlify and publish the GitHub release from the tag.
 
 ---
 
