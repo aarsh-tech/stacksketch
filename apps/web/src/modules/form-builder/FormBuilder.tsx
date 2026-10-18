@@ -13,7 +13,7 @@ import {
 } from '@dnd-kit/core'
 import type { Announcements, CollisionDetection, DragEndEvent, DragMoveEvent, DragStartEvent, UniqueIdentifier } from '@dnd-kit/core'
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
-import { Check, Copy, Download, Eye, PencilRuler, TriangleAlert } from 'lucide-react'
+import { Check, Copy, Download, Eye, LayoutGrid, PencilRuler, TriangleAlert } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { createField, emptyForm, fieldsOf, formFileNames, formProblems, insertItem, moveItem, removeItem, toFormComponent, toFormZod, uniqueKey, usableFields } from '@stacksketch/core'
@@ -32,6 +32,7 @@ import { widgetInfo } from './widgets'
 
 // React Hook Form and Zod only load when the preview opens
 const Preview = lazy(() => import('./Preview'))
+const FormStates = lazy(() => import('./Preview').then((m) => ({ default: m.FormStates })))
 
 /** A new item for a palette tile. Adding the first step also marks everything above it as step 1. */
 function addItem(form: Form, n: NewItem, index: number): { form: Form; id: string } {
@@ -288,16 +289,21 @@ export default function FormBuilder() {
                 options={[
                   { value: 'edit', label: <span className="flex items-center gap-1.5"><PencilRuler size={13} />Edit</span>, title: 'Arrange and set up the fields' },
                   { value: 'preview', label: <span className="flex items-center gap-1.5"><Eye size={13} />Preview</span>, title: 'Fill the form in to try its validation' },
+                  { value: 'states', label: <span className="flex items-center gap-1.5"><LayoutGrid size={13} />States</span>, title: 'The form empty, filled in, with errors and submitting' },
                 ]}
               />
               <span className="truncate text-[12px] text-ink-3 max-sm:hidden">
-                {view === 'preview' ? 'Fill it in to try the checks. Nothing is sent anywhere.' : `${fieldsOf(form).length} ${fieldsOf(form).length === 1 ? 'field' : 'fields'}`}
+                {view === 'preview' ? 'Fill it in to try the checks. Nothing is sent anywhere.' : view === 'states' ? 'Empty, filled in, with errors and submitting.' : `${fieldsOf(form).length} ${fieldsOf(form).length === 1 ? 'field' : 'fields'}`}
               </span>
             </header>
             <div className="relative min-h-0 flex-1">
               {view === 'preview' ? (
                 <Suspense fallback={<div className="paper-grid absolute inset-0" />}>
                   <Preview key={form.id} form={form} />
+                </Suspense>
+              ) : view === 'states' ? (
+                <Suspense fallback={<div className="paper-grid absolute inset-0" />}>
+                  <FormStates form={form} />
                 </Suspense>
               ) : (
                 <Canvas

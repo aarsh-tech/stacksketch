@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased: the variant canvas (phase 5)
+
+- **`@stacksketch/variants`**: a Vite plugin and a Next.js config wrapper that serve `/__variants`, with every exported component rendered as a grid of its prop combinations per theme. Props are read from TypeScript; enum and boolean props become rows and columns, the rest get controls.
+- Broken variants are caught per cell and counted.
+- **Form states**: the form builder's States view shows a form empty, filled in, with errors and submitting. Sample values come from `sampleFormValues`, tested against the form's own schema.
+
 ## Unreleased: the browser extension (phase 4)
 
 - **Browser extension** (`apps/extension`, Chrome MV3) with a side panel. It only runs on sites you turn it on for, `localhost` by default.

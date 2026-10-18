@@ -7,7 +7,7 @@ import { sampleForm } from '@/lib/sampleForm'
 
 export type FormPanel = 'settings' | 'zod' | 'react'
 /** the canvas: build the form, or fill it in */
-export type FormView = 'edit' | 'preview'
+export type FormView = 'edit' | 'preview' | 'states'
 export type FormMobilePane = 'add' | 'canvas' | 'panel'
 
 interface FormsState {

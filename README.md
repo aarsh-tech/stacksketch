@@ -83,6 +83,26 @@ Build it with `pnpm build`, then in Chrome open `chrome://extensions`, turn on D
 - **Stacking inspector**: scan the page to see every stacking context as an exploded 3D stack with its z-index, back to front. Click one to see why it starts a context, in plain words ("it has a transform"), and click two to see which wins and why ("Inside html, header paints above div.card: z-index 10 beats auto").
 - Everything stays in the browser: images, comments and reports never leave it.
 
+### Variant canvas
+
+Every prop combination of your React components on one page, with nothing to write by hand: props come from the components' TypeScript types.
+
+```ts
+// vite.config.ts
+import { stacksketchVariants } from '@stacksketch/variants/vite'
+export default defineConfig({ plugins: [react(), stacksketchVariants({ setup: ['/src/index.css'] })] })
+
+// next.config.ts
+import { withStacksketchVariants } from '@stacksketch/variants/next'
+export default withStacksketchVariants({ /* your config */ })
+```
+
+- Open `/__variants` on your dev server. Each exported component in `src/` gets a grid: sizes across and kinds (`variant`, `tone`, `status`…) down by default, or any two enum or boolean props you pick, once per theme (`light` and `dark` by default, as a class or a `data-theme` attribute).
+- Other props get controls; text and children are filled in so everything renders, and function props get a no-op.
+- A variant that throws shows its error in its cell instead of breaking the page, and the count is shown at the top.
+- In the form builder, the canvas's **States** view shows a form empty, filled in with valid sample values, with the errors of submitting it empty, and submitting.
+- Try it on the fixture app: `pnpm --filter @stacksketch/variants fixture`, then open http://localhost:5190/__variants.
+
 ## Run it locally
 
 You need Node 20.19+ and pnpm.
@@ -110,7 +130,7 @@ packages/
   core/             @stacksketch/core: the shared schema format, inference and code generators (pure TypeScript, no DOM)
 ```
 
-`packages/cli` is the mock API server (`stacksketch mock`) and `apps/extension` the browser extension (QA overlay and stacking inspector).
+`packages/cli` is the mock API server (`stacksketch mock`) `apps/extension` the browser extension (QA overlay and stacking inspector), and `packages/variants` the variant canvas (Vite plugin and Next.js wrapper).
 
 ## The shared schema
 

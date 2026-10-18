@@ -1,13 +1,13 @@
-import { Fragment, useCallback, useId, useMemo, useState } from 'react'
+import { Fragment, useCallback, useEffect, useId, useMemo, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
-import type { FieldError, FieldValues, Resolver, UseFormRegister } from 'react-hook-form'
+import type { FieldError, FieldErrors, FieldValues, Resolver, UseFormRegister } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { boolean, custom, email, enum as enumOf, iso, literal, number, object, string, url } from 'zod'
 import type { ZodType } from 'zod'
-import { RotateCcw, Send } from 'lucide-react'
+import { LoaderCircle, RotateCcw, Send } from 'lucide-react'
 
-import { blankValues, fieldShown, formZodRuntime, usableLayout, valueAt } from '@stacksketch/core'
+import { blankValues, fieldShown, formZodRuntime, sampleFormValues, usableLayout, valueAt } from '@stacksketch/core'
 import type { FORM_ZOD_FUNCTIONS, Form, FormField } from '@stacksketch/core'
 import { Button } from '@/components/ui/primitives'
 import { cx } from '@/lib/cx'
@@ -172,6 +172,99 @@ function PreviewField({ field, id, error, register }: { field: FormField; id: st
 const asJson = (values: unknown) =>
   JSON.stringify(values, (_key, v: unknown) => (typeof FileList !== 'undefined' && v instanceof FileList ? Array.from(v, (f) => `${f.name} (${f.size} bytes)`) : v), 2)
 
+type Steps = ReturnType<typeof usableLayout>
+
+/** The form itself, at one step: shared by the live preview and the fixed states. */
+function FormCard({
+  form,
+  steps,
+  current,
+  values,
+  errors,
+  register,
+  uid,
+  onSubmit,
+  onBack,
+  submitting,
+  disabled,
+}: {
+  form: Form
+  steps: Steps
+  current: number
+  values: unknown
+  errors: FieldErrors<FieldValues>
+  register: UseFormRegister<FieldValues>
+  uid: string
+  onSubmit?: (e: FormEvent<HTMLFormElement>) => void
+  onBack?: () => void
+  submitting: boolean
+  /** the fields can't be changed (while submitting) */
+  disabled?: boolean
+}) {
+  const last = current === steps.length - 1
+  const fieldCount = steps.reduce((n, s) => n + s.sections.reduce((m, x) => m + x.fields.length, 0), 0)
+  return (
+    <form noValidate onSubmit={onSubmit ?? ((e) => e.preventDefault())} className="rounded-xl border border-line bg-raised shadow-pop" aria-label={`Preview of ${form.title || form.name}`}>
+      <header className="border-b border-line px-5 pt-4 pb-3.5">
+        <h2 className="text-[18px] font-semibold tracking-[-0.02em] text-ink">{form.title || form.name}</h2>
+        {form.description ? <p className="mt-1 text-[13px] text-ink-2">{form.description}</p> : null}
+        {steps.length > 1 ? (
+          <ol className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[12.5px]">
+            {steps.map((s, i) => (
+              <li key={s.id ?? i} aria-current={i === current ? 'step' : undefined} className={i === current ? 'font-medium text-accent' : 'text-ink-3'}>
+                {i + 1}. {s.title || `Step ${i + 1}`}
+              </li>
+            ))}
+          </ol>
+        ) : null}
+      </header>
+
+      <fieldset disabled={disabled} className="min-w-0 px-5 py-4">
+        {fieldCount ? null : <p className="py-6 text-center text-[13px] text-ink-3">Add a field to try the form here.</p>}
+        {steps.map((s, i) => (
+          <div key={s.id ?? i} hidden={i !== current} className="space-y-4">
+            {s.sections.map((section, j) => {
+              const fields = section.fields
+                .filter((f) => fieldShown(form, f, values))
+                .map((f) => <PreviewField key={f.id} field={f} id={`${uid}-${f.key}`} error={valueAt(errors, f.key) as FieldError | undefined} register={register} />)
+              if (!section.title && !section.description) return <Fragment key={section.id ?? j}>{fields}</Fragment>
+              return (
+                <section key={section.id ?? j} className="space-y-4 border-t border-line pt-4 first:border-t-0 first:pt-0">
+                  <div>
+                    {section.title ? <h3 className="text-[15px] font-semibold tracking-[-0.01em] text-ink">{section.title}</h3> : null}
+                    {section.description ? <p className="mt-0.5 text-[12.5px] text-ink-2">{section.description}</p> : null}
+                  </div>
+                  {fields}
+                </section>
+              )
+            })}
+          </div>
+        ))}
+      </fieldset>
+
+      <footer className="flex items-center justify-end gap-2 border-t border-line px-5 py-3.5">
+        {current > 0 ? (
+          <Button variant="outline" onClick={onBack} disabled={submitting} className="h-9 px-4">
+            Back
+          </Button>
+        ) : null}
+        <Button type="submit" variant="primary" disabled={submitting} className="h-9 px-4">
+          {submitting ? (
+            <>
+              <LoaderCircle size={14} className="animate-spin" />
+              Submitting…
+            </>
+          ) : last ? (
+            form.submitLabel || 'Submit'
+          ) : (
+            'Next'
+          )}
+        </Button>
+      </footer>
+    </form>
+  )
+}
+
 export default function Preview({ form }: { form: Form }) {
   const resolver = useResolver(form)
   const uid = useId()
@@ -193,7 +286,6 @@ export default function Preview({ form }: { form: Form }) {
   const current = Math.min(step, steps.length - 1)
   const last = current === steps.length - 1
   const keysOf = (i: number) => steps[i].sections.flatMap((s) => s.fields.map((f) => f.key))
-  const fieldCount = steps.reduce((n, s) => n + s.sections.reduce((m, x) => m + x.fields.length, 0), 0)
 
   const submit = handleSubmit(
     (data) => setSent(asJson(data)),
@@ -221,55 +313,18 @@ export default function Preview({ form }: { form: Form }) {
   return (
     <div className="paper-grid absolute inset-0 overflow-y-auto scrollbar-thin">
       <div className="mx-auto max-w-xl space-y-4 px-3 py-5 md:px-6 md:py-8">
-        <form noValidate onSubmit={onSubmit} className="rounded-xl border border-line bg-raised shadow-pop" aria-label={`Preview of ${form.title || form.name}`}>
-          <header className="border-b border-line px-5 pt-4 pb-3.5">
-            <h2 className="text-[18px] font-semibold tracking-[-0.02em] text-ink">{form.title || form.name}</h2>
-            {form.description ? <p className="mt-1 text-[13px] text-ink-2">{form.description}</p> : null}
-            {steps.length > 1 ? (
-              <ol className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[12.5px]">
-                {steps.map((s, i) => (
-                  <li key={s.id ?? i} aria-current={i === current ? 'step' : undefined} className={i === current ? 'font-medium text-accent' : 'text-ink-3'}>
-                    {i + 1}. {s.title || `Step ${i + 1}`}
-                  </li>
-                ))}
-              </ol>
-            ) : null}
-          </header>
-
-          <div className="px-5 py-4">
-            {fieldCount ? null : <p className="py-6 text-center text-[13px] text-ink-3">Add a field to try the form here.</p>}
-            {steps.map((s, i) => (
-              <div key={s.id ?? i} hidden={i !== current} className="space-y-4">
-                {s.sections.map((section, j) => {
-                  const fields = section.fields
-                    .filter((f) => fieldShown(form, f, values))
-                    .map((f) => <PreviewField key={f.id} field={f} id={`${uid}-${f.key}`} error={valueAt(errors, f.key) as FieldError | undefined} register={register} />)
-                  if (!section.title && !section.description) return <Fragment key={section.id ?? j}>{fields}</Fragment>
-                  return (
-                    <section key={section.id ?? j} className="space-y-4 border-t border-line pt-4 first:border-t-0 first:pt-0">
-                      <div>
-                        {section.title ? <h3 className="text-[15px] font-semibold tracking-[-0.01em] text-ink">{section.title}</h3> : null}
-                        {section.description ? <p className="mt-0.5 text-[12.5px] text-ink-2">{section.description}</p> : null}
-                      </div>
-                      {fields}
-                    </section>
-                  )
-                })}
-              </div>
-            ))}
-          </div>
-
-          <footer className="flex items-center justify-end gap-2 border-t border-line px-5 py-3.5">
-            {current > 0 ? (
-              <Button variant="outline" onClick={() => setStep(current - 1)} className="h-9 px-4">
-                Back
-              </Button>
-            ) : null}
-            <Button type="submit" variant="primary" disabled={isSubmitting} className="h-9 px-4">
-              {last ? form.submitLabel || 'Submit' : 'Next'}
-            </Button>
-          </footer>
-        </form>
+        <FormCard
+          form={form}
+          steps={steps}
+          current={current}
+          values={values}
+          errors={errors}
+          register={register}
+          uid={uid}
+          onSubmit={onSubmit}
+          onBack={() => setStep(current - 1)}
+          submitting={isSubmitting}
+        />
 
         {sent !== null ? (
           <section key={sent} ref={reveal} aria-live="polite" className="rounded-xl border border-line bg-raised">
@@ -285,6 +340,61 @@ export default function Preview({ form }: { form: Form }) {
           </section>
         ) : null}
       </div>
+    </div>
+  )
+}
+
+export type FormState = 'empty' | 'filled' | 'error' | 'submitting'
+
+/**
+ * The form held in one state, for the states view: empty, filled in with
+ * sample values, showing the errors of submitting it empty, or submitting.
+ */
+function StateCard({ form, state }: { form: Form; state: FormState }) {
+  const resolver = useResolver(form)
+  const uid = useId()
+  const steps = usableLayout(form)
+  const filled = state === 'filled' || state === 'submitting'
+  const defaultValues = useMemo(() => (filled ? sampleFormValues(form) : undefined), [filled, form])
+  const {
+    register,
+    trigger,
+    control,
+    formState: { errors },
+  } = useForm<FieldValues>({ resolver, shouldUnregister: true, defaultValues })
+  const values = blankValues(useWatch({ control }))
+  const firstKeys = useMemo(() => (steps[0]?.sections ?? []).flatMap((s) => s.fields.map((f) => f.key)), [steps])
+  // the errors state shows what submitting the first step empty says
+  useEffect(() => {
+    if (state === 'error' && firstKeys.length) void trigger(firstKeys)
+  }, [state, trigger, firstKeys])
+  const current = state === 'submitting' ? steps.length - 1 : 0
+  return <FormCard form={form} steps={steps} current={current} values={values} errors={errors} register={register} uid={uid} submitting={state === 'submitting'} disabled={state === 'submitting'} />
+}
+
+const STATES: { state: FormState; title: string; note: string }[] = [
+  { state: 'empty', title: 'Empty', note: 'As it first opens.' },
+  { state: 'filled', title: 'Filled in', note: 'With sample values that pass its rules.' },
+  { state: 'error', title: 'Errors', note: 'After submitting it empty.' },
+  { state: 'submitting', title: 'Submitting', note: 'Waiting for the server; the last step.' },
+]
+
+/** Every state of the form side by side, to check each before it ships. */
+export function FormStates({ form }: { form: Form }) {
+  const hasFile = form.items.some((i) => i.kind === 'field' && i.widget === 'file' && i.required)
+  return (
+    <div className="paper-grid absolute inset-0 overflow-y-auto scrollbar-thin">
+      <div className="grid gap-5 px-3 py-5 md:px-6 2xl:grid-cols-2">
+        {STATES.map((s) => (
+          <section key={s.state} aria-label={`${s.title} state`} className="min-w-0">
+            <p className="mb-2 text-[12.5px]">
+              <span className="font-semibold text-ink">{s.title}</span> <span className="text-ink-3">{s.note}</span>
+            </p>
+            <StateCard key={`${form.id}:${s.state}`} form={form} state={s.state} />
+          </section>
+        ))}
+      </div>
+      {hasFile ? <p className="px-6 pb-5 text-[12px] text-ink-3">Files can’t be filled in from code, so required file fields stay empty in the filled state.</p> : null}
     </div>
   )
 }

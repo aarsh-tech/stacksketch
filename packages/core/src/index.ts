@@ -131,3 +131,7 @@ export { compareStacking, stackingReasons, stackingTree } from './inspect/stacki
 export type { Rect, ScannedElement, StackingContext, StyleSnapshot } from './inspect/stacking'
 export { checkType, gapBetween, insetWithin, qaReport } from './inspect/qa'
 export type { Gap, QaComment, QaReportInput, TypeCheck } from './inspect/qa'
+
+export { axisProps, cellCount, defaultArgs, defaultAxes, variantGrid } from './variants/grid'
+export type { Axis, ComponentInfo, Grid, PropInfo, PropType } from './variants/grid'
+export { sampleFormValues } from './form/sample'

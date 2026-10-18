@@ -107,10 +107,11 @@ Every module reads and writes the shared schema in `packages/core/src/types.ts`.
 
 ## Phase 5: Variant canvas (v0.5)
 
-### - [ ] 13. Render every prop combination
+### - [x] 13. Render every prop combination
 
 - Vite and Next.js plugin that finds a component's props (from its TypeScript types) and renders sizes × states × themes on a grid.
 - Forms from the form builder preview as empty, filled, error and submitting.
+- Done: `packages/variants` (`@stacksketch/variants`) reads components and props with the TypeScript compiler (`props.ts`), serves `/__variants` from a Vite plugin (`vite.ts`) or writes a Next.js page while `next dev` runs (`next.ts`), and renders the grid with per-cell error boundaries (`canvas.tsx`). The grid logic is `packages/core/src/variants/grid.ts`. `packages/variants/fixture` is a small app to try it on (`pnpm --filter @stacksketch/variants fixture`). Forms get a States view in the form builder, filled in by `sampleFormValues`. Not yet on npm.
 
 ---
 

@@ -9,6 +9,7 @@ import {
   fieldShown,
   formFileNames,
   formZodRuntime,
+  sampleFormValues,
   formFromSchema,
   formProblems,
   formToSchema,
@@ -508,5 +509,14 @@ describe('preview helpers', () => {
     expect(shows({ field: 'cv', op: 'empty' }, { cv: new FakeFileList([1]) })).toBe(false)
     // a condition the code leaves out never hides the field
     expect(shows({ field: 'gone', op: 'filled' }, {})).toBe(true)
+  })
+})
+
+describe('sample values', () => {
+  it('fill the form in so it passes its own schema', () => {
+    const runtime = new Function('z', formZodRuntime(signup))(z) as z.ZodType
+    const values = sampleFormValues(signup)
+    expect(runtime.safeParse(values).success).toBe(true)
+    expect(values).toMatchObject({ email: 'diya@example.in', age: 18 })
   })
 })
