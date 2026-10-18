@@ -75,12 +75,13 @@ Every module reads and writes the shared schema in `packages/core/src/types.ts`.
 - Generated fetch functions get typed request bodies.
 - Done: the contract model lives in `packages/core/src/contract/` (`Contract` holds shared-schema `ObjectType`s and endpoints whose params, bodies and responses are `Shape`s), with `toOpenApi` / `fromOpenApi` (3.0 and 3.1) in `packages/core/src/openapi/`. `toContractClient` writes a typed fetch client with typed request bodies; its tests type-check it with its types and Zod schemas under strict `tsc` and run it against a stubbed `fetch`. The module is `apps/web/src/modules/contract/`; the explorer's response can be added as an endpoint.
 
-### - [ ] 9. Mock API server (`packages/cli`)
+### - [x] 9. Mock API server (`packages/cli`)
 
 - `npx stacksketch mock contract.json` serves every endpoint locally, with data from the same mock generator.
 - Per-endpoint delay and forced status (to build loading and error states), CORS on by default.
 - Optional in-memory CRUD so POST then GET returns what you created.
 - The workbench can export the contract file the CLI reads.
+- Done: the request handling is pure, in `packages/core/src/mock/api.ts` (`createMockApi`, tested in `mock.test.ts`); `packages/cli` is a thin Node `http` wrapper bundled by esbuild into one dependency-free file. It also reads OpenAPI 3 files, reloads when the file is saved, and takes `?__status=` / `?__delay=` (or `x-mock-status` / `x-mock-delay`) on any request. Per-endpoint delay and status are set in the endpoint editor and saved in the contract (`endpoint.mock`). Not yet published to npm, so `npx stacksketch` works after `npm publish` from `packages/cli`; until then run `node packages/cli/dist/cli.js mock contract.json`.
 
 ---
 

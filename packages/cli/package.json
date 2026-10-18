@@ -1,0 +1,27 @@
+{
+  "name": "stacksketch",
+  "version": "0.1.0",
+  "description": "Serve a mock API from a Stacksketch contract or an OpenAPI file: npx stacksketch mock contract.json",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "stacksketch": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@stacksketch/core": "workspace:*",
+    "@types/node": "^24.19.2",
+    "esbuild": "^0.25.0",
+    "typescript": "~6.0.2",
+    "yaml": "^2.9.1"
+  }
+}

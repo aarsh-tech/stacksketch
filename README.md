@@ -57,7 +57,21 @@ Free, open source, no account, no backend. Everything runs in your browser and n
 - **OpenAPI 3.1 export** as YAML or JSON, with every type under `components/schemas`.
 - **OpenAPI import**: open or paste an OpenAPI 3.0 or 3.1 file, YAML or JSON. Object schemas become types (inline ones are named from where they sit, like `CreateOrderBody`), `$ref`s, `allOf`, `oneOf`/`anyOf`, `nullable` and `type: [x, "null"]` are understood, and anything the shared schema can't hold yet (header params, maps, non-JSON bodies) is listed in plain words. It's read in your browser and you can undo it.
 - **Typed client**: one `fetch` function per endpoint with path params as arguments, query params as an object, a **typed request body**, and the success response as the return type, checked with Zod (or cast). Error statuses throw an `ApiError` with the status and body. It comes with the contract's TypeScript types and Zod schemas (recursive types included), and compiles under strict `tsc`.
+- **Mock server**: set a delay or a forced status per endpoint, download `contract.json`, and serve it (see below).
 - Problems are listed and marked in the list (a duplicate route, a query param that's an object, a body on a GET, a type that's gone); those parts are left out of the code until they're fixed, so the code always compiles.
+
+### Mock API server
+
+```bash
+pnpm build                                          # builds packages/cli/dist/cli.js
+node packages/cli/dist/cli.js mock contract.json    # npx stacksketch mock contract.json, once published
+```
+
+- Serves every endpoint of a contract exported from the workbench, or of an OpenAPI 3.0 / 3.1 file (JSON or YAML), at `http://localhost:4010` under the base URL's path.
+- Data comes from the same generator as the explorer's mock tab, the same for the same URL, with path params filled in (`/orders/42` answers with `id: 42`).
+- Per-endpoint delay and forced status from the contract; `?__status=500` or `?__delay=2000` (or `x-mock-status` / `x-mock-delay` headers) on any request; `--delay` for all of them.
+- In-memory CRUD: POST then GET returns what you created, and PATCH, PUT and DELETE change it (`--no-crud` turns it off).
+- CORS on, plain-English 404s and 405s, a 400 when a required JSON body is missing, and it reloads when you save the file. Options: `--port`, `--host`, `--seed`, `--base`, `--help`.
 
 ## Run it locally
 
@@ -86,7 +100,7 @@ packages/
   core/             @stacksketch/core: the shared schema format, inference and code generators (pure TypeScript, no DOM)
 ```
 
-Coming in later phases: `apps/extension` (QA overlay and stacking inspector), `packages/cli` (mock API server, `npx stacksketch mock`) and a Vite/Next plugin for the variant canvas.
+`packages/cli` is the mock API server (`stacksketch mock`). Coming in later phases: `apps/extension` (QA overlay and stacking inspector) and a Vite/Next plugin for the variant canvas.
 
 ## The shared schema
 

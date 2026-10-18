@@ -87,7 +87,7 @@ export { FORM_ZOD_FUNCTIONS, formSchemaName, formValuesName, formZodRuntime, reg
 export { formToSchema } from './form/toSchema'
 export { formComponentName, formFileNames, toFormComponent } from './form/react'
 
-export type { Contract, ContractEndpoint, ContractParam, ContractResponse, ParamIn, RequestBody, ResponseStatus } from './contract/types'
+export type { Contract, ContractEndpoint, EndpointMock, ContractParam, ContractResponse, ParamIn, RequestBody, ResponseStatus } from './contract/types'
 export {
   addSchemaEndpoint,
   contractProblems,
@@ -124,3 +124,5 @@ export { fromOpenApi } from './openapi/import'
 export type { OpenApiImport } from './openapi/import'
 export { toYaml } from './openapi/yaml'
 export { typesInDependencyOrder } from './infer'
+export { createMockApi, readContractFile } from './mock/api'
+export type { MockApi, MockRequest, MockResponse, MockRoute, MockServerOptions } from './mock/api'

@@ -376,6 +376,7 @@ export default function ContractDesigner() {
                     replace({ ...emptyContract(), title: contract.title, apiVersion: contract.apiVersion, baseUrl: contract.baseUrl })
                     undoable('Emptied the contract', before)
                   }}
+                  onDownloadFile={() => downloadText('contract.json', JSON.stringify(contract, null, 2) + '\n', 'application/json')}
                   onLoadSample={() => {
                     const before = contract
                     replace(sampleContract(), { kind: 'endpoint', id: 'ep-list' })

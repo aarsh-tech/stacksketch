@@ -51,6 +51,15 @@ export interface ContractEndpoint {
   /** the JSON request body, for POST, PUT and PATCH */
   body?: RequestBody
   responses: ContractResponse[]
+  /** how the mock server answers it; optional, so v1 contracts without it still load */
+  mock?: EndpointMock
+}
+
+export interface EndpointMock {
+  /** wait this long before answering, in milliseconds */
+  delay?: number
+  /** answer with this status instead of the success response, to build error states */
+  status?: ResponseStatus
 }
 
 export interface Contract {

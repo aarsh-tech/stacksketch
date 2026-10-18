@@ -1,6 +1,6 @@
 # Stacksketch: notes for Claude Code
 
-Stacksketch is one local workbench for the contract between frontend and backend. Phase 1 is the API explorer: paste a JSON response, get TypeScript, Zod, mock data, a typed fetch function and JSON Schema. Phase 2 is the form builder; phase 3 is the API contract designer (built) and the mock server CLI (next). It's a static React app with **no backend and no database**; state lives in `localStorage`. It deploys to Netlify. The plan is in `ROADMAP.md`.
+Stacksketch is one local workbench for the contract between frontend and backend. Phase 1 is the API explorer: paste a JSON response, get TypeScript, Zod, mock data, a typed fetch function and JSON Schema. Phase 2 is the form builder; phase 3 is the API contract designer and the mock server CLI (both built). It's a static React app with **no backend and no database**; state lives in `localStorage`. It deploys to Netlify. The plan is in `ROADMAP.md`.
 
 It's a sibling of Schemasketch (`D:\Personal_Projects\schemasketch`) and shares its stack, conventions and look.
 
@@ -43,6 +43,8 @@ packages/core/                    @stacksketch/core: pure TypeScript, no DOM, no
   src/generate/                   typescript, zod, mock, fetch, jsonSchema: one pure function each
   src/contract/                   the API contract: types, model (paths, names, problems, usableContract, addSchemaEndpoint), shapes (the type picker's parts), generate (types, Zod, typed client)
   src/openapi/                    toOpenApi, fromOpenApi (3.0 and 3.1, takes a parsed object), toYaml
+  src/mock/api.ts                 createMockApi (pure request → response for the mock server), readContractFile
+packages/cli/                     `stacksketch mock <file>`: Node http wrapper around createMockApi, bundled by esbuild (build.mjs) into dist/cli.js
   src/form/                       the form model (types, model), formFromSchema, toFormZod (+ formZodRuntime for the preview), toFormComponent (react.ts), formToSchema
   src/core.test.ts                Vitest; the Zod tests eval the generated code against real zod
   src/form.test.ts                form model and generator tests; typecheck.testutil.ts runs strict tsc on generated code

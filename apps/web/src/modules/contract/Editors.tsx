@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
-import { ArrowDown, ArrowUp, Copy, Plus, RotateCcw, Trash2, TriangleAlert, X } from 'lucide-react'
+import { ArrowDown, ArrowUp, Copy, Download, Plus, RotateCcw, Trash2, TriangleAlert, X } from 'lucide-react'
 
-import { derivedName, hasRequestBody, HTTP_METHODS, isSuccess, openApiPath, statusText, syncPathParams } from '@stacksketch/core'
-import type { Contract, ContractEndpoint, ContractParam, ContractProblem, ContractResponse, HttpMethod, ObjectType, ResponseStatus } from '@stacksketch/core'
+import { derivedName, hasRequestBody, HTTP_METHODS, isSuccess, openApiPath, statusText, successResponse, syncPathParams } from '@stacksketch/core'
+import type { Contract, ContractEndpoint, EndpointMock, ContractParam, ContractProblem, ContractResponse, HttpMethod, ObjectType, ResponseStatus } from '@stacksketch/core'
 import { Button, Checkbox, Group, IconButton, Labeled, Select, TextInput, inputClass } from '@/components/ui/primitives'
 import { cx } from '@/lib/cx'
 import { ShapePicker } from './ShapePicker'
@@ -125,6 +125,12 @@ export function EndpointEditor({
   const pathParams = e.params.filter((p) => p.in === 'path')
   const query = e.params.filter((p) => p.in === 'query')
   const canSend = hasRequestBody(e.method)
+  const setMock = (patch: EndpointMock) =>
+    change((x) => {
+      const mock = Object.fromEntries(Object.entries({ ...x.mock, ...patch }).filter(([, v]) => v !== undefined)) as EndpointMock
+      const { mock: _old, ...rest } = x
+      return Object.keys(mock).length ? { ...rest, mock } : rest
+    })
 
   return (
     <>
@@ -305,6 +311,36 @@ export function EndpointEditor({
         <p className="text-[11.5px] text-ink-3">The client returns the lowest 2xx response's body and throws ApiError with the body of any other status.</p>
       </Group>
 
+      <Group title="Mock server">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Labeled label="Delay (ms)" hint="Wait before answering, to see loading states.">
+            <input
+              type="number"
+              min={0}
+              step={100}
+              value={e.mock?.delay ?? ''}
+              placeholder="0"
+              onChange={(ev) => setMock({ delay: ev.target.value === '' || !Number.isFinite(ev.target.valueAsNumber) ? undefined : Math.max(0, ev.target.valueAsNumber) })}
+              className={cx(inputClass, 'w-full font-mono')}
+            />
+          </Labeled>
+          <Labeled label="Answer with" hint="Force an error to build its state.">
+            <Select
+              value={e.mock?.status === undefined ? '' : String(e.mock.status)}
+              onChange={(ev) => setMock({ status: ev.target.value === '' ? undefined : ev.target.value === 'default' ? 'default' : Number(ev.target.value) })}
+              className="w-full font-mono"
+            >
+              <option value="">{successResponse(e)?.status ?? 200} (the success response)</option>
+              {[...new Set<ResponseStatus>([...e.responses.map((r) => r.status).filter((s) => !isSuccess(s)), 400, 401, 404, 500, 503])].map((s) => (
+                <option key={s} value={String(s)}>
+                  {s === 'default' ? 'default (500)' : `${s} ${statusText(s)}`}
+                </option>
+              ))}
+            </Select>
+          </Labeled>
+        </div>
+      </Group>
+
       <Group title="This endpoint">
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={onDuplicate}>
@@ -446,6 +482,7 @@ export function ContractSettings({
   change,
   onStartOver,
   onLoadSample,
+  onDownloadFile,
 }: {
   contract: Contract
   problems: ContractProblem[]
@@ -455,6 +492,7 @@ export function ContractSettings({
   change: (change: (c: Contract) => Contract) => void
   onStartOver: () => void
   onLoadSample: () => void
+  onDownloadFile: () => void
 }) {
   const set = (patch: Partial<Contract>) => change((c) => ({ ...c, ...patch }))
   return (
@@ -502,6 +540,15 @@ export function ContractSettings({
         ) : (
           <p className="text-[12.5px] text-ink-3">Nothing. Every endpoint and type makes it into the code.</p>
         )}
+      </Group>
+      <Group title="Mock server">
+        <p className="text-[12.5px] text-ink-2">Serve this contract on your machine, with fake data, delays and forced errors set per endpoint:</p>
+        <p className="rounded-md border border-line bg-raised px-2.5 py-1.5 font-mono text-[12px] text-ink">npx stacksketch mock contract.json</p>
+        <Button variant="outline" size="sm" onClick={onDownloadFile}>
+          <Download size={13} />
+          Download contract.json
+        </Button>
+        <p className="text-[12px] text-ink-3">It also takes the OpenAPI file. Add ?__status=500 or ?__delay=2000 to any request to try an error or a slow answer.</p>
       </Group>
       <Group title="Start again">
         <div className="flex flex-wrap gap-2">

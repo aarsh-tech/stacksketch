@@ -12,6 +12,13 @@
 - Problems (duplicate routes, object query params, a body on a GET, a type that's gone) are listed and marked; those parts are left out of the output until they're fixed.
 - Zod output declares recursive types (a category holding its subcategories) with getters, the way Zod 4 expects.
 
+### Mock API server
+
+- **`stacksketch mock <file>`** (`packages/cli`) serves a contract or an OpenAPI 3 file locally, with data from the mock generator, CORS on, and path params echoed into the data.
+- Per-endpoint delay and forced status, set in the endpoint editor; `?__status=` / `?__delay=` or `x-mock-*` headers on any request; a global `--delay`.
+- In-memory CRUD (POST then GET returns what you created), reload on save, and plain-English 404, 405 and 400 answers.
+- The contract designer downloads `contract.json` for it.
+
 ### Form builder
 
 - **Form builder**, a new module. Drag text, paragraph, number, dropdown, radio, checkbox, date and file fields onto a form, reorder them by mouse, touch or keyboard, and group them into sections and steps.
