@@ -30,6 +30,8 @@ export interface ModuleInfo {
   details: string[]
   /** how it uses or feeds the other modules */
   connects: string
+  /** for built modules that run outside the workbench: how to start them */
+  setup?: string[]
 }
 
 export const MODULES: ModuleInfo[] = [
@@ -82,7 +84,7 @@ export const MODULES: ModuleInfo[] = [
     name: 'Mock API server',
     icon: Server,
     phase: 3,
-    ready: false,
+    ready: true,
     audience: 'both',
     surface: 'plugin',
     summary: 'One command serves a fake API from your contract, with realistic data, delays and errors.',
@@ -92,13 +94,19 @@ export const MODULES: ModuleInfo[] = [
       'Simulate slow responses, 401s and 500s to build loading and error states before the backend exists.',
     ],
     connects: 'Serves the API contract; the QA overlay and variant canvas can run against it.',
+    setup: [
+      'Build it: pnpm build (the CLI lands in packages/cli/dist/cli.js).',
+      'In the API contract, open the contract settings and download contract.json (or use any OpenAPI 3 file).',
+      'Run node packages/cli/dist/cli.js mock contract.json, or npx stacksketch mock contract.json once it’s published. It serves on http://localhost:4010.',
+      'Set a delay or a forced status per endpoint in the contract, or add ?__status=500 or ?__delay=2000 to any request.',
+    ],
   },
   {
     id: 'qa-overlay',
     name: 'QA overlay',
     icon: Crosshair,
     phase: 4,
-    ready: false,
+    ready: true,
     audience: 'frontend',
     surface: 'extension',
     summary: 'Lay a Figma export over your localhost page and see where spacing and type drift.',
@@ -108,13 +116,18 @@ export const MODULES: ModuleInfo[] = [
       'Pin comments on the page and export a QA report.',
     ],
     connects: 'Lives in the companion extension next to the stacking inspector.',
+    setup: [
+      'Build it: pnpm build (the extension lands in apps/extension/dist).',
+      'In Chrome, open chrome://extensions, turn on Developer mode, click "Load unpacked" and pick apps/extension/dist.',
+      'Click the Stacksketch button in the toolbar to open the side panel. It runs on localhost by default; turn it on for other sites from the panel.',
+    ],
   },
   {
     id: 'stacking',
     name: 'Stacking inspector',
     icon: Layers,
     phase: 4,
-    ready: false,
+    ready: true,
     audience: 'frontend',
     surface: 'extension',
     summary: 'See the page as an exploded 3D stack and find out why your modal is behind the header.',
@@ -124,6 +137,11 @@ export const MODULES: ModuleInfo[] = [
       'Click a layer to jump to the element in DevTools.',
     ],
     connects: 'Shares the extension panel and page plumbing with the QA overlay.',
+    setup: [
+      'Build it: pnpm build (the extension lands in apps/extension/dist).',
+      'In Chrome, open chrome://extensions, turn on Developer mode, click "Load unpacked" and pick apps/extension/dist.',
+      'Click the Stacksketch button in the toolbar to open the side panel. It runs on localhost by default; turn it on for other sites from the panel.',
+    ],
   },
   {
     id: 'variants',

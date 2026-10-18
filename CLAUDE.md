@@ -44,6 +44,8 @@ packages/core/                    @stacksketch/core: pure TypeScript, no DOM, no
   src/contract/                   the API contract: types, model (paths, names, problems, usableContract, addSchemaEndpoint), shapes (the type picker's parts), generate (types, Zod, typed client)
   src/openapi/                    toOpenApi, fromOpenApi (3.0 and 3.1, takes a parsed object), toYaml
   src/mock/api.ts                 createMockApi (pure request → response for the mock server), readContractFile
+apps/extension/                   phase 4: Chrome MV3. src/content.ts (shadow-root overlay, measure, pins, stacking scan), src/background.ts, src/panel/ (React side panel; reuses apps/web's primitives and tokens through the @ alias); vite builds the panel, build.mjs the IIFE scripts
+  src/inspect/ (in core)          stackingReasons, stackingTree, compareStacking, gapBetween, checkType, qaReport
 packages/cli/                     `stacksketch mock <file>`: Node http wrapper around createMockApi, bundled by esbuild (build.mjs) into dist/cli.js
   src/form/                       the form model (types, model), formFromSchema, toFormZod (+ formZodRuntime for the preview), toFormComponent (react.ts), formToSchema
   src/core.test.ts                Vitest; the Zod tests eval the generated code against real zod

@@ -126,3 +126,8 @@ export { toYaml } from './openapi/yaml'
 export { typesInDependencyOrder } from './infer'
 export { createMockApi, readContractFile } from './mock/api'
 export type { MockApi, MockRequest, MockResponse, MockRoute, MockServerOptions } from './mock/api'
+
+export { compareStacking, stackingReasons, stackingTree } from './inspect/stacking'
+export type { Rect, ScannedElement, StackingContext, StyleSnapshot } from './inspect/stacking'
+export { checkType, gapBetween, insetWithin, qaReport } from './inspect/qa'
+export type { Gap, QaComment, QaReportInput, TypeCheck } from './inspect/qa'

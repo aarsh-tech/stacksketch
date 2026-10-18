@@ -73,6 +73,16 @@ node packages/cli/dist/cli.js mock contract.json    # npx stacksketch mock contr
 - In-memory CRUD: POST then GET returns what you created, and PATCH, PUT and DELETE change it (`--no-crud` turns it off).
 - CORS on, plain-English 404s and 405s, a 400 when a required JSON body is missing, and it reloads when you save the file. Options: `--port`, `--host`, `--seed`, `--base`, `--help`.
 
+### Browser extension (QA overlay and stacking inspector)
+
+Build it with `pnpm build`, then in Chrome open `chrome://extensions`, turn on Developer mode, click **Load unpacked** and pick `apps/extension/dist`. The toolbar button opens the side panel. It runs on `localhost` and `127.0.0.1` by default; turn it on for any other site from the panel.
+
+- **Overlay**: open a Figma frame export (PNG) and lay it over the page, with an opacity slider, difference blending (matching pixels go black), @2x / @3x scale, and arrow-key nudging (Shift for 10px). Lock it to an element so it follows that element instead of the page.
+- **Measure**: hover for an element's size, font, size and line height; click one, then hover another to see the gap between them, drawn on the page. Type the design's values to check font size, line height, weight and letter spacing.
+- **Comments**: pin numbered comments on the page; each keeps a screenshot. Download a Markdown QA report with the comments, the elements they point at, the screenshots and your measurements.
+- **Stacking inspector**: scan the page to see every stacking context as an exploded 3D stack with its z-index, back to front. Click one to see why it starts a context, in plain words ("it has a transform"), and click two to see which wins and why ("Inside html, header paints above div.card: z-index 10 beats auto").
+- Everything stays in the browser: images, comments and reports never leave it.
+
 ## Run it locally
 
 You need Node 20.19+ and pnpm.
@@ -100,7 +110,7 @@ packages/
   core/             @stacksketch/core: the shared schema format, inference and code generators (pure TypeScript, no DOM)
 ```
 
-`packages/cli` is the mock API server (`stacksketch mock`). Coming in later phases: `apps/extension` (QA overlay and stacking inspector) and a Vite/Next plugin for the variant canvas.
+`packages/cli` is the mock API server (`stacksketch mock`) and `apps/extension` the browser extension (QA overlay and stacking inspector).
 
 ## The shared schema
 

@@ -5,7 +5,7 @@ import { AUDIENCE_LABEL, MODULES, SURFACE_LABEL } from './registry'
 import type { ModuleInfo } from './registry'
 import { useUi } from '@/store/ui'
 
-/** The page for a module that isn't built yet: what it will do and how it fits. */
+/** The page for a module that isn't built yet, or that runs outside the workbench: what it does, how it fits, and how to start it. */
 export function Planned({ module: m }: { module: ModuleInfo }) {
   const setModule = useUi((s) => s.setModule)
   const Icon = m.icon
@@ -38,11 +38,21 @@ export function Planned({ module: m }: { module: ModuleInfo }) {
             <span className="font-medium text-ink">How it connects: </span>
             {m.connects}
           </div>
-          {samePhase.length ? (
+          {m.ready && m.setup ? (
+            <div className="mt-6">
+              <h2 className="text-[13px] font-semibold text-ink">How to start it</h2>
+              <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-[13px] leading-relaxed text-ink-2">
+                {m.setup.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ol>
+            </div>
+          ) : null}
+          {samePhase.length && !m.ready ? (
             <p className="mt-4 text-[12.5px] text-ink-3">Ships in phase {m.phase} alongside {samePhase.map((x) => x.name).join(', ')}.</p>
           ) : null}
           <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-line pt-5">
-            <span className="text-[12.5px] text-ink-3">Not built yet. Track it in ROADMAP.md.</span>
+            <span className="text-[12.5px] text-ink-3">{m.ready ? `Built. It runs as a ${SURFACE_LABEL[m.surface].toLowerCase()}, outside this page.` : 'Not built yet. Track it in ROADMAP.md.'}</span>
             <Button variant="outline" size="sm" className="ml-auto" onClick={() => setModule('api-explorer')}>
               Open the API explorer
               <ArrowRight size={14} />

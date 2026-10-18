@@ -87,20 +87,21 @@ Every module reads and writes the shared schema in `packages/core/src/types.ts`.
 
 ## Phase 4: Companion browser extension (v0.4), `apps/extension`
 
-### - [ ] 10. Extension plumbing
+### - [x] 10. Extension plumbing
 
 - Chrome MV3 extension built with Vite: content script, side panel, messaging. Only runs on pages the user turns it on for (localhost by default).
 
-### - [ ] 11. Pixel-perfect QA overlay
+### - [x] 11. Pixel-perfect QA overlay
 
 - Drop a Figma frame export (PNG) over the page; opacity slider, difference blend, nudge with arrow keys, lock to an element.
 - Measure tool: distances between elements, computed font size and line height vs the design.
 - Pin comments; export a QA report (Markdown with screenshots).
 
-### - [ ] 12. Stacking inspector
+### - [x] 12. Stacking inspector
 
 - Exploded 3D view of stacking contexts with their z-index.
 - Explain why an element creates a stacking context (transform, opacity < 1, position + z-index, isolation, filter, will-change…), in plain words.
+- Done (10–12): `apps/extension` is a Chrome MV3 extension (Vite builds the React side panel, esbuild the IIFE content script and service worker). The content script is registered only for enabled sites (`localhost` and `127.0.0.1` by default; others are added from the panel with an optional host permission) and draws in a shadow root. The pure parts are in `packages/core/src/inspect/` with tests: `stackingReasons`, `stackingTree`, `compareStacking`, `gapBetween`, `checkType` and `qaReport`. Not yet on the Chrome Web Store: load `apps/extension/dist` unpacked.
 
 ---
 

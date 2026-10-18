@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Stacksketch",
+  "version": "0.4.0",
+  "description": "Lay a Figma frame over your page, measure spacing and type, pin QA comments, and see why your modal is behind the header.",
+  "minimum_chrome_version": "116",
+  "action": { "default_title": "Open Stacksketch" },
+  "side_panel": { "default_path": "sidepanel.html" },
+  "background": { "service_worker": "background.js" },
+  "permissions": ["sidePanel", "storage", "scripting", "activeTab", "tabs"],
+  "host_permissions": ["http://localhost/*", "http://127.0.0.1/*"],
+  "optional_host_permissions": ["http://*/*", "https://*/*"]
+}

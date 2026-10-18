@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased: the browser extension (phase 4)
+
+- **Browser extension** (`apps/extension`, Chrome MV3) with a side panel. It only runs on sites you turn it on for, `localhost` by default.
+- **QA overlay**: a Figma PNG over the page with opacity, difference blending, @2x/@3x scale, arrow-key nudging and locking to an element.
+- **Measure**: element size and type on hover, the gap between two elements drawn on the page, and type checked against the design's values.
+- **Comments and report**: numbered pins with screenshots, exported as a Markdown QA report.
+- **Stacking inspector**: every stacking context as an exploded 3D stack, why each one is a context in plain words, and which of two paints on top and why.
+
 ## Unreleased: the form builder (phase 2) and the API contract (phase 3)
 
 ### API contract
