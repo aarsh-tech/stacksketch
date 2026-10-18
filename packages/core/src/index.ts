@@ -131,9 +131,13 @@ export { compareStacking, stackingReasons, stackingTree } from './inspect/stacki
 export type { Rect, ScannedElement, StackingContext, StyleSnapshot } from './inspect/stacking'
 export { checkType, gapBetween, insetWithin, qaReport } from './inspect/qa'
 export type { Gap, QaComment, QaReportInput, TypeCheck } from './inspect/qa'
+export { diffPixels } from './inspect/diff'
+export type { DiffOptions, PixelDiff } from './inspect/diff'
 
 export { axisProps, cellCount, defaultArgs, defaultAxes, variantGrid } from './variants/grid'
 export type { Axis, ComponentInfo, Grid, PropInfo, PropType } from './variants/grid'
+export { componentsFromSource, stripComments } from './variants/source'
+export type { SourceComponents } from './variants/source'
 export { sampleFormValues } from './form/sample'
 
 export { parseDbml, readSchemasketchFile } from './db/dbml'

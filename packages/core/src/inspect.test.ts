@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { checkType, compareStacking, gapBetween, insetWithin, qaReport, stackingReasons, stackingTree } from './index'
+import { checkType, compareStacking, diffPixels, gapBetween, insetWithin, qaReport, stackingReasons, stackingTree } from './index'
 import type { ScannedElement, StyleSnapshot } from './index'
 
 const base: StyleSnapshot = { position: 'static', zIndex: 'auto', opacity: '1', transform: 'none', filter: 'none' }
@@ -79,5 +79,45 @@ describe('QA report', () => {
     expect(md).toContain('| 1 | Button \\| 4px too low | `form > button` | 120, 300 |')
     expect(md).toContain('![Comment 1](data:image/png;base64,AAA)')
     expect(md).toContain('## Measurements')
+  })
+})
+
+describe('pixel diff', () => {
+  const image = (w: number, h: number, paint: (x: number, y: number) => [number, number, number, number]) => {
+    const data = new Uint8ClampedArray(w * h * 4)
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) data.set(paint(x, y), (y * w + x) * 4)
+    return data
+  }
+  const white = (): [number, number, number, number] => [255, 255, 255, 255]
+
+  it('finds nothing when the images match, and ignores small colour noise', () => {
+    const a = image(32, 32, white)
+    const b = image(32, 32, () => [250, 252, 255, 255])
+    const d = diffPixels(a, b, 32, 32)
+    expect(d).toMatchObject({ compared: 1024, changed: 0, ratio: 0, regions: [] })
+  })
+
+  it('boxes each cluster of differences, biggest first', () => {
+    const a = image(64, 64, white)
+    // a 10 × 10 block at (4, 4) and a 20 × 4 bar at (30, 50)
+    const b = image(64, 64, (x, y) => ((x >= 4 && x < 14 && y >= 4 && y < 14) || (x >= 30 && x < 50 && y >= 50 && y < 54) ? [0, 0, 0, 255] : [255, 255, 255, 255]))
+    const d = diffPixels(a, b, 64, 64)
+    expect(d.changed).toBe(180)
+    expect(d.ratio).toBeCloseTo(180 / 4096)
+    expect(d.regions).toEqual([
+      { x: 0, y: 0, width: 16, height: 16 },
+      { x: 24, y: 48, width: 32, height: 8 },
+    ])
+    expect(d.mask[4 * 64 + 4]).toBe(1)
+    expect(d.mask[0]).toBe(0)
+  })
+
+  it('skips pixels either image leaves transparent, and lone stray pixels', () => {
+    const a = image(16, 16, white)
+    const b = image(16, 16, (x, y) => (x < 8 ? [0, 0, 0, 0] : x === 12 && y === 12 ? [0, 0, 0, 255] : [255, 255, 255, 255]))
+    const d = diffPixels(a, b, 16, 16)
+    expect(d.compared).toBe(128)
+    expect(d.changed).toBe(1)
+    expect(d.regions).toEqual([])
   })
 })

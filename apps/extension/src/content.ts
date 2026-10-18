@@ -1,5 +1,6 @@
 import { gapBetween } from '@stacksketch/core'
-import type { Rect, ScannedElement, StyleSnapshot } from '@stacksketch/core'
+import type { Rect } from '@stacksketch/core'
+import { labelOf, scanStacking } from '../../web/src/lib/stackingScan'
 import type { FromContent, Inspected, OverlayState, PinnedComment, PingReply, ScanReply, ToContent, Tool } from './messages'
 
 /**
@@ -16,7 +17,6 @@ declare global {
 
 // the page isn't ours to theme, so the overlay carries its own few colours: Stacksketch's clay accent and a measuring blue
 const INK = { accent: '#d9693a', measure: '#2f7fd8', label: '#1a1918', text: '#ffffff' }
-const MAX_ELEMENTS = 6000
 
 if (!window.__stacksketch) {
   window.__stacksketch = true
@@ -77,13 +77,6 @@ function start() {
       at = parent
     }
     return parts.join(' > ')
-  }
-
-  const labelOf = (el: Element) => {
-    const tag = el.tagName.toLowerCase()
-    if (el.id) return `${tag}#${el.id}`
-    const cls = typeof el.className === 'string' ? el.className.trim().split(/\s+/).filter(Boolean).slice(0, 2) : []
-    return cls.length ? `${tag}.${cls.join('.')}` : tag
   }
 
   const div = (cls: string, r: Rect, text?: string) => {
@@ -271,42 +264,9 @@ function start() {
   /* ---------- stacking scan ---------- */
 
   function scan(): ScanReply {
-    const elements: ScannedElement[] = []
-    scanned = []
-    const index = new Map<Element, number>()
-    const all = [document.documentElement, ...document.body.querySelectorAll('*')].filter((el) => el !== host)
-    for (const el of all.slice(0, MAX_ELEMENTS)) {
-      const s = getComputedStyle(el)
-      if (s.display === 'none') continue
-      const parentEl = el.parentElement
-      const style: StyleSnapshot = {
-        position: s.position,
-        zIndex: s.zIndex,
-        opacity: s.opacity,
-        transform: s.transform,
-        filter: s.filter,
-        backdropFilter: s.backdropFilter,
-        perspective: s.perspective,
-        clipPath: s.clipPath,
-        maskImage: s.maskImage,
-        mixBlendMode: s.mixBlendMode,
-        isolation: s.isolation,
-        willChange: s.willChange,
-        contain: s.contain,
-        containerType: s.containerType,
-        translate: s.translate,
-        rotate: s.rotate,
-        scale: s.scale,
-        parentDisplay: parentEl ? getComputedStyle(parentEl).display : undefined,
-      }
-      // the nearest ancestor that was kept (one inside display: none is skipped with it)
-      let p = parentEl
-      while (p && !index.has(p)) p = p.parentElement
-      index.set(el, elements.length)
-      elements.push({ label: labelOf(el), parent: p ? (index.get(p) as number) : -1, style, rect: pageRect(el) })
-      scanned.push(el)
-    }
-    return { elements, page: { width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight }, truncated: all.length > MAX_ELEMENTS }
+    const { scan: result, nodes } = scanStacking(document, (el) => el === host)
+    scanned = nodes
+    return result
   }
 
   /* ---------- messages from the side panel ---------- */

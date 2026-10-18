@@ -68,7 +68,7 @@ export function stacksketchVariants(options: VariantsOptions = {}): Plugin {
         if (url !== path && !url.startsWith(`${path}/`) && !url.startsWith(`${path}?`) && !url.startsWith(`${path}#`)) return next()
         const html = `<!doctype html>
 <html lang="en">
-  <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Variants</title></head>
+  <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="icon" href="data:," /><title>Variants</title></head>
   <body style="margin:0"><div id="stacksketch-variants"></div><script type="module" src="/@id/__x00__${ID}"></script></body>
 </html>`
         res.setHeader('Content-Type', 'text/html')

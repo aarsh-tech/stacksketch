@@ -13,34 +13,25 @@ const FormBuilder = lazy(() => import('@/modules/form-builder/FormBuilder'))
 const ContractDesigner = lazy(() => import('@/modules/contract/ContractDesigner'))
 const DbCode = lazy(() => import('@/modules/db-code/DbCode'))
 const Flows = lazy(() => import('@/modules/flows/Flows'))
+const MockServer = lazy(() => import('@/modules/mock-server/MockServer'))
+const QaOverlay = lazy(() => import('@/modules/qa-overlay/QaOverlay'))
+const Stacking = lazy(() => import('@/modules/stacking/Stacking'))
+// sucrase, which compiles the pasted component, loads when this opens
+const Variants = lazy(() => import('@/modules/variants/Variants'))
+
+const LAZY = { 'form-builder': FormBuilder, contract: ContractDesigner, 'db-code': DbCode, flows: Flows, 'mock-server': MockServer, 'qa-overlay': QaOverlay, stacking: Stacking, variants: Variants } as const
 
 function CurrentModule() {
   const module = useUi((s) => moduleById(s.module))
   if (module.id === 'api-explorer') return <ApiExplorer />
-  if (module.id === 'form-builder')
+  if (module.id in LAZY) {
+    const Module = LAZY[module.id as keyof typeof LAZY]
     return (
       <Suspense fallback={<div className="paper-grid h-full" />}>
-        <FormBuilder />
+        <Module />
       </Suspense>
     )
-  if (module.id === 'contract')
-    return (
-      <Suspense fallback={<div className="paper-grid h-full" />}>
-        <ContractDesigner />
-      </Suspense>
-    )
-  if (module.id === 'db-code')
-    return (
-      <Suspense fallback={<div className="paper-grid h-full" />}>
-        <DbCode />
-      </Suspense>
-    )
-  if (module.id === 'flows')
-    return (
-      <Suspense fallback={<div className="paper-grid h-full" />}>
-        <Flows />
-      </Suspense>
-    )
+  }
   return <Planned key={module.id} module={module} />
 }
 

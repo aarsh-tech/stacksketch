@@ -21,30 +21,19 @@ import {
   updateEndpoint,
   usableContract,
 } from '@stacksketch/core'
-import type { Contract, ContractEndpoint, ContractProblem, HttpMethod } from '@stacksketch/core'
+import type { Contract, ContractEndpoint, ContractProblem } from '@stacksketch/core'
 import { CodeView } from '@/components/CodeView'
 import type { CodeLang } from '@/components/CodeView'
 import { Button, Checkbox, IconButton, Segmented, Tabs } from '@/components/ui/primitives'
 import { cx } from '@/lib/cx'
 import { copyText, downloadText } from '@/lib/download'
+import { Method } from '@/components/Method'
 import { sampleContract } from '@/lib/sampleContract'
 import { uid, useContract } from '@/store/contract'
 import type { ContractMobilePane, ContractOutput, ContractSelection } from '@/store/contract'
 import { ContractSettings, EndpointEditor, TypeEditor } from './Editors'
 import { FromExplorerDialog } from './FromExplorerDialog'
 import { ImportDialog } from './ImportDialog'
-
-const METHOD_COLOR: Record<HttpMethod, string> = {
-  GET: 'text-t-string',
-  POST: 'text-t-number',
-  PUT: 'text-t-keyword',
-  PATCH: 'text-t-boolean',
-  DELETE: 'text-danger',
-}
-
-function Method({ method, className }: { method: HttpMethod; className?: string }) {
-  return <span className={cx('shrink-0 font-mono text-[10.5px] font-bold tracking-wide', METHOD_COLOR[method], className)}>{method}</span>
-}
 
 const targetKey = (t: ContractProblem['target']) => (t.kind === 'endpoint' ? `endpoint:${t.id}` : t.kind === 'type' ? `type:${t.name}` : 'contract')
 const selectionKey = (s: ContractSelection) => targetKey(s)

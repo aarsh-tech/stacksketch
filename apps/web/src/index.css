@@ -38,6 +38,12 @@
   --c-t-keyword: #9b3b6a;
   --c-t-comment: #8b8681;
 
+  /* the variant canvas draws components on a light and a dark surface, whatever the app's theme */
+  --c-stage-light: #ffffff;
+  --c-stage-light-ink: #211f1d;
+  --c-stage-dark: #141312;
+  --c-stage-dark-ink: #ebe8e4;
+
   --shadow-pop: 0 12px 32px -12px rgb(33 31 29 / 0.28), 0 2px 6px -2px rgb(33 31 29 / 0.12);
 }
 

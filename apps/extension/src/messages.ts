@@ -1,4 +1,4 @@
-import type { Rect, ScannedElement } from '@stacksketch/core'
+import type { Rect } from '@stacksketch/core'
 
 /** The design frame laid over the page. Positions are page pixels (they scroll with the page). */
 export interface OverlayState {
@@ -63,11 +63,7 @@ export interface PingReply {
   viewport: { width: number; height: number }
 }
 
-export interface ScanReply {
-  elements: ScannedElement[]
-  page: { width: number; height: number }
-  truncated: boolean
-}
+export type { StackScan as ScanReply } from '../../web/src/lib/stackingScan'
 
 /** Sites the content script runs on by default: local dev servers on any port. */
 export const DEFAULT_SITES = ['http://localhost/*', 'http://127.0.0.1/*']

@@ -5,7 +5,7 @@ import { compareStacking, stackingTree } from '@stacksketch/core'
 import type { StackingContext } from '@stacksketch/core'
 import { Button, Group } from '@/components/ui/primitives'
 import { cx } from '@/lib/cx'
-import type { ScanReply } from '../messages'
+import type { StackScan } from '@/lib/stackingScan'
 
 /** Every context, back to front as the browser paints them, with its place in that order. */
 function flatten(root: StackingContext): StackingContext[] {
@@ -18,10 +18,37 @@ function flatten(root: StackingContext): StackingContext[] {
   return out
 }
 
-export function StackingPanel({ scan, onScan, onHighlight }: { scan: ScanReply | null; onScan: () => void; onHighlight: (index: number | null) => void }) {
+/**
+ * The stacking inspector: an exploded 3D view of the stacking contexts, the
+ * list back to front, and why each one is a context. Shared by the workbench
+ * and the browser extension's side panel.
+ */
+export function StackingPanel({
+  scan,
+  onScan,
+  onHighlight,
+  picked: pickedProp,
+  onPickedChange,
+  stage = 260,
+  stageHeight = 300,
+  scanLabel = ['Scan the page', 'Scan the page again'],
+}: {
+  scan: StackScan | null
+  onScan: () => void
+  onHighlight: (index: number | null) => void
+  /** the picked contexts, when the caller keeps them (the last one is shown) */
+  picked?: number[]
+  onPickedChange?: (picked: number[]) => void
+  /** the width of the 3D view's page, in pixels */
+  stage?: number
+  stageHeight?: number
+  scanLabel?: [string, string]
+}) {
   const tree = useMemo(() => (scan ? stackingTree(scan.elements) : null), [scan])
   const layers = useMemo(() => (tree ? flatten(tree) : []), [tree])
-  const [picked, setPicked] = useState<number[]>([])
+  const [ownPicked, setOwnPicked] = useState<number[]>([])
+  const picked = pickedProp ?? ownPicked
+  const setPicked = onPickedChange ?? setOwnPicked
   const [spread, setSpread] = useState(36)
   const [tilt, setTilt] = useState(true)
 
@@ -31,7 +58,6 @@ export function StackingPanel({ scan, onScan, onHighlight }: { scan: ScanReply |
     onHighlight(next.at(-1) ?? null)
   }
   const selected = layers.find((l) => l.index === picked.at(-1))
-  const stage = 260
   const scale = scan ? stage / Math.max(scan.page.width, 1) : 1
 
   return (
@@ -39,7 +65,7 @@ export function StackingPanel({ scan, onScan, onHighlight }: { scan: ScanReply |
       <Group title="Stacking contexts">
         <Button variant="outline" size="sm" onClick={onScan}>
           {scan ? <RefreshCw size={13} /> : <Layers size={13} />}
-          {scan ? 'Scan the page again' : 'Scan the page'}
+          {scan ? scanLabel[1] : scanLabel[0]}
         </Button>
         {scan ? (
           <p className="text-[12px] text-ink-3">
@@ -61,7 +87,7 @@ export function StackingPanel({ scan, onScan, onHighlight }: { scan: ScanReply |
                 {tilt ? 'Flat' : '3D'}
               </button>
             </div>
-            <div className="relative h-[300px] overflow-hidden rounded-md bg-canvas" style={{ perspective: '900px' }} aria-label="Stacking contexts in 3D, back to front">
+            <div className="relative overflow-hidden rounded-md bg-canvas" style={{ perspective: '900px', height: stageHeight }} aria-label="Stacking contexts in 3D, back to front">
               <div
                 className="absolute top-1/2 left-1/2 transition-transform duration-300"
                 style={{

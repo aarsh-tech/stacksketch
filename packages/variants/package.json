@@ -5,12 +5,26 @@
   "license": "MIT",
   "type": "module",
   "exports": {
-    "./vite": "./dist/vite.js",
-    "./next": "./dist/next.js",
-    "./canvas": { "types": "./src/canvas.tsx", "default": "./dist/canvas.js" },
-    "./mount": { "types": "./src/mount.tsx", "default": "./dist/mount.js" }
+    "./vite": {
+      "types": "./dist/types/vite.d.ts",
+      "default": "./dist/vite.js"
+    },
+    "./next": {
+      "types": "./dist/types/next.d.ts",
+      "default": "./dist/next.js"
+    },
+    "./canvas": {
+      "types": "./dist/types/canvas.d.ts",
+      "default": "./dist/canvas.js"
+    },
+    "./mount": {
+      "types": "./dist/types/mount.d.ts",
+      "default": "./dist/mount.js"
+    }
   },
-  "files": ["dist", "src"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "node build.mjs",
     "typecheck": "tsc --noEmit",

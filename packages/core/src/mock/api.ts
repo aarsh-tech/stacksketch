@@ -40,6 +40,8 @@ export interface MockServerOptions {
 }
 
 export interface MockRoute {
+  /** the contract endpoint it serves */
+  id: string
   method: string
   path: string
   summary: string
@@ -245,7 +247,7 @@ export function createMockApi(contract: Contract, options: MockServerOptions = {
   return {
     handle,
     routes: routes
-      .map((r) => ({ method: r.endpoint.method, path: `${basePath}${openApiPath(r.endpoint.path)}`, summary: r.endpoint.summary }))
+      .map((r) => ({ id: r.endpoint.id, method: r.endpoint.method, path: `${basePath}${openApiPath(r.endpoint.path)}`, summary: r.endpoint.summary }))
       .sort((a, b) => a.path.localeCompare(b.path)),
     reset: () => store.clear(),
   }

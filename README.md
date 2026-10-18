@@ -62,6 +62,8 @@ Free, open source, no account, no backend. Everything runs in your browser and n
 
 ### Mock API server
 
+In the workbench, the **Mock API server** page sends requests to a fake API made from the current contract, right in the browser: pick a route, edit the body, force a status (401, 404, 500…) or a delay, and see the response with its headers. POST then GET returns what you created. Each request shows the matching `curl` command for the CLI, which serves the same API on localhost:
+
 ```bash
 pnpm build                                          # builds packages/cli/dist/cli.js
 node packages/cli/dist/cli.js mock contract.json    # npx stacksketch mock contract.json, once published
@@ -72,6 +74,11 @@ node packages/cli/dist/cli.js mock contract.json    # npx stacksketch mock contr
 - Per-endpoint delay and forced status from the contract; `?__status=500` or `?__delay=2000` (or `x-mock-status` / `x-mock-delay` headers) on any request; `--delay` for all of them.
 - In-memory CRUD: POST then GET returns what you created, and PATCH, PUT and DELETE change it (`--no-crud` turns it off).
 - CORS on, plain-English 404s and 405s, a 400 when a required JSON body is missing, and it reloads when you save the file. Options: `--port`, `--host`, `--seed`, `--base`, `--help`.
+
+### QA overlay and stacking inspector in the workbench
+
+- **QA overlay**: drop (or paste) a screenshot of your page and the Figma export. Compare them as an overlay (opacity, difference blending), a swipe, or the differing pixels in red; the areas that drift are found and boxed for you. Drag or arrow-key the design into place, measure boxes, pin comments (each keeps a cropped screenshot) and download the Markdown QA report. **Try it with a sample** shows it on a product card.
+- **Stacking inspector**: paste HTML and CSS, and the preview is scanned into the same exploded 3D stack and back-to-front list as the extension's. Click an element in the preview to find the context it paints in. The sample is the classic modal with `z-index: 9999` stuck behind a header with `z-index: 10`.
 
 ### Browser extension (QA overlay and stacking inspector)
 
@@ -86,6 +93,19 @@ Build it with `pnpm build`, then in Chrome open `chrome://extensions`, turn on D
 ### Variant canvas
 
 Every prop combination of your React components on one page, with nothing to write by hand: props come from the components' TypeScript types.
+
+To try it without installing anything, open **Variant canvas** in the workbench and paste a component file and its CSS: its props are read from the types in the file (unions, booleans, `Omit`, `Partial`, HTML attributes…), it's compiled in the browser, and every variant is drawn on a light and a dark surface, with throwing variants marked in red. In your own app, use the plugin. It isn't on npm yet, so build it into a file and install that:
+
+```bash
+# in this repo
+pnpm --filter @stacksketch/variants build
+cd packages/variants && pnpm pack          # makes stacksketch-variants-0.5.0.tgz
+
+# in your app
+pnpm add -D /path/to/stacksketch/packages/variants/stacksketch-variants-0.5.0.tgz
+```
+
+Then add it to your config:
 
 ```ts
 // vite.config.ts

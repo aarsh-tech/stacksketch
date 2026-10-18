@@ -81,7 +81,7 @@ Every module reads and writes the shared schema in `packages/core/src/types.ts`.
 - Per-endpoint delay and forced status (to build loading and error states), CORS on by default.
 - Optional in-memory CRUD so POST then GET returns what you created.
 - The workbench can export the contract file the CLI reads.
-- Done: the request handling is pure, in `packages/core/src/mock/api.ts` (`createMockApi`, tested in `mock.test.ts`); `packages/cli` is a thin Node `http` wrapper bundled by esbuild into one dependency-free file. It also reads OpenAPI 3 files, reloads when the file is saved, and takes `?__status=` / `?__delay=` (or `x-mock-status` / `x-mock-delay`) on any request. Per-endpoint delay and status are set in the endpoint editor and saved in the contract (`endpoint.mock`). Not yet published to npm, so `npx stacksketch` works after `npm publish` from `packages/cli`; until then run `node packages/cli/dist/cli.js mock contract.json`.
+- Done: the request handling is pure, in `packages/core/src/mock/api.ts` (`createMockApi`, tested in `mock.test.ts`); `packages/cli` is a thin Node `http` wrapper bundled by esbuild into one dependency-free file. It also reads OpenAPI 3 files, reloads when the file is saved, and takes `?__status=` / `?__delay=` (or `x-mock-status` / `x-mock-delay`) on any request. Per-endpoint delay and status are set in the endpoint editor and saved in the contract (`endpoint.mock`). Not yet published to npm, so `npx stacksketch` works after `npm publish` from `packages/cli`; until then run `node packages/cli/dist/cli.js mock contract.json`. The workbench's Mock API server page runs the same `createMockApi` in the browser, as a request console over the current contract.
 
 ---
 
@@ -101,7 +101,7 @@ Every module reads and writes the shared schema in `packages/core/src/types.ts`.
 
 - Exploded 3D view of stacking contexts with their z-index.
 - Explain why an element creates a stacking context (transform, opacity < 1, position + z-index, isolation, filter, will-change…), in plain words.
-- Done (10–12): `apps/extension` is a Chrome MV3 extension (Vite builds the React side panel, esbuild the IIFE content script and service worker). The content script is registered only for enabled sites (`localhost` and `127.0.0.1` by default; others are added from the panel with an optional host permission) and draws in a shadow root. The pure parts are in `packages/core/src/inspect/` with tests: `stackingReasons`, `stackingTree`, `compareStacking`, `gapBetween`, `checkType` and `qaReport`. Not yet on the Chrome Web Store: load `apps/extension/dist` unpacked.
+- Done (10–12): `apps/extension` is a Chrome MV3 extension (Vite builds the React side panel, esbuild the IIFE content script and service worker). The content script is registered only for enabled sites (`localhost` and `127.0.0.1` by default; others are added from the panel with an optional host permission) and draws in a shadow root. The pure parts are in `packages/core/src/inspect/` with tests: `stackingReasons`, `stackingTree`, `compareStacking`, `gapBetween`, `checkType` and `qaReport`. Not yet on the Chrome Web Store: load `apps/extension/dist` unpacked. The workbench has both too: the QA overlay compares a page screenshot with the design (`diffPixels` in `inspect/diff.ts` finds and boxes the areas that drift), and the stacking inspector scans pasted HTML and CSS in a preview frame with the scan the extension uses (`apps/web/src/lib/stackingScan.ts`) and the same panel.
 
 ---
 
@@ -111,7 +111,7 @@ Every module reads and writes the shared schema in `packages/core/src/types.ts`.
 
 - Vite and Next.js plugin that finds a component's props (from its TypeScript types) and renders sizes × states × themes on a grid.
 - Forms from the form builder preview as empty, filled, error and submitting.
-- Done: `packages/variants` (`@stacksketch/variants`) reads components and props with the TypeScript compiler (`props.ts`), serves `/__variants` from a Vite plugin (`vite.ts`) or writes a Next.js page while `next dev` runs (`next.ts`), and renders the grid with per-cell error boundaries (`canvas.tsx`). The grid logic is `packages/core/src/variants/grid.ts`. `packages/variants/fixture` is a small app to try it on (`pnpm --filter @stacksketch/variants fixture`). Forms get a States view in the form builder, filled in by `sampleFormValues`. Not yet on npm.
+- Done: `packages/variants` (`@stacksketch/variants`) reads components and props with the TypeScript compiler (`props.ts`), serves `/__variants` from a Vite plugin (`vite.ts`) or writes a Next.js page while `next dev` runs (`next.ts`), and renders the grid with per-cell error boundaries (`canvas.tsx`). The grid logic is `packages/core/src/variants/grid.ts`. `packages/variants/fixture` is a small app to try it on (`pnpm --filter @stacksketch/variants fixture`). Forms get a States view in the form builder, filled in by `sampleFormValues`. Not yet on npm. The workbench's Variant canvas page reads props from one pasted file's text (`componentsFromSource` in `variants/source.ts`), compiles it with sucrase (lazy) and draws the grid in a shadow root.
 
 ---
 

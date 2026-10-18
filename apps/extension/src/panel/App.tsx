@@ -4,7 +4,7 @@ import { PlugZap } from 'lucide-react'
 import { Button, Tabs } from '@/components/ui/primitives'
 import type { FromContent, Inspected, OverlayState, PinnedComment, ScanReply, Tool } from '../messages'
 import { CommentsPanel, MeasurePanel, OverlayPanel } from './Qa'
-import { StackingPanel } from './Stacking'
+import { StackingPanel } from '@/modules/stacking/StackingPanel'
 import { sendToTab, useTab } from './tab'
 
 type Panel = 'overlay' | 'measure' | 'comments' | 'stacking'
