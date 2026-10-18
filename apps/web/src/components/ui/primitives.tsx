@@ -1,4 +1,6 @@
+import { useEffect, useRef } from 'react'
 import type { ComponentProps, KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react'
+import { X } from 'lucide-react'
 
 import { cx } from '@/lib/cx'
 
@@ -112,7 +114,7 @@ export function Tabs<T extends string>({
           tabIndex={value === o.value ? 0 : -1}
           onClick={() => onChange(o.value)}
           className={cx(
-            'relative h-10 shrink-0 px-2.5 text-[12.5px] font-medium transition-colors',
+            'relative h-10 shrink-0 px-2 text-[12.5px] font-medium transition-colors',
             value === o.value ? 'text-ink' : 'text-ink-3 hover:text-ink',
           )}
         >
@@ -187,5 +189,38 @@ export function Pane({
       {toolbar ? <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-line px-3 py-2">{toolbar}</div> : null}
       <div className="relative min-h-0 flex-1">{children}</div>
     </section>
+  )
+}
+
+/* ---------- dialog ---------- */
+
+/**
+ * A modal on the native <dialog>: Escape closes it, focus stays inside, and
+ * a click on the backdrop closes it. Mount it to open it; unmount to close.
+ */
+export function Dialog({ title, onClose, children, footer }: { title: ReactNode; onClose: () => void; children: ReactNode; footer?: ReactNode }) {
+  const ref = useRef<HTMLDialogElement>(null)
+  useEffect(() => {
+    const d = ref.current
+    if (d && !d.open) d.showModal()
+  }, [])
+  return (
+    <dialog
+      ref={ref}
+      onClose={onClose}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+      className="m-auto w-[min(640px,calc(100vw-32px))] overflow-hidden rounded-xl border border-line bg-raised p-0 text-ink shadow-pop backdrop:bg-black/45"
+    >
+      <div className="flex max-h-[min(720px,calc(100dvh-32px))] flex-col">
+        <header className="flex h-12 shrink-0 items-center gap-2 border-b border-line pr-2 pl-4">
+          <h2 className="text-[14px] font-semibold tracking-[-0.01em]">{title}</h2>
+          <IconButton label="Close" className="ml-auto" onClick={onClose}>
+            <X size={16} />
+          </IconButton>
+        </header>
+        <div className="min-h-0 flex-1 overflow-y-auto p-4 scrollbar-thin">{children}</div>
+        {footer ? <footer className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-line px-4 py-3">{footer}</footer> : null}
+      </div>
+    </dialog>
   )
 }

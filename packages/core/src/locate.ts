@@ -1,7 +1,7 @@
 import { schemaName } from './generate/zod'
 
-/** The generated outputs that declare one block per type. */
-export type DeclarationLanguage = 'typescript' | 'zod' | 'jsonschema'
+/** The generated outputs that declare one block per type. `zod` also covers Valibot and Yup, which use the same names. */
+export type DeclarationLanguage = 'typescript' | 'zod' | 'jsonschema' | 'pydantic' | 'go'
 
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
@@ -14,6 +14,10 @@ function startPattern(name: string, language: DeclarationLanguage): RegExp {
     case 'jsonschema':
       // an entry of $defs, which toJsonSchema indents by four spaces
       return new RegExp(`^ {4}${escape(JSON.stringify(name))}: \\{`)
+    case 'pydantic':
+      return new RegExp(`^class ${escape(name)}\\(`)
+    case 'go':
+      return new RegExp(`^type ${escape(name)} `)
   }
 }
 
@@ -43,6 +47,12 @@ export function findDeclaration(code: string, typeName: string, language: Declar
   const start = startPattern(typeName, language)
   const from = lines.findIndex((l) => start.test(l))
   if (from < 0) return null
+  if (language === 'pydantic') {
+    // a class runs on while lines are indented (a blank line inside it is followed by an indented one)
+    let to = from
+    for (let i = from + 1; i < lines.length && (/^\s/.test(lines[i]) || (lines[i] === '' && /^\s/.test(lines[i + 1] ?? ''))); i++) to = i
+    return { from: from + 1, to: to + 1 }
+  }
   let depth = 0
   let to = from
   for (let i = from; i < lines.length; i++) {

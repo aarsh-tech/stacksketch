@@ -31,7 +31,7 @@ Every module reads and writes the shared schema in `packages/core/src/types.ts`.
 - Enum detection: offer "make this an enum" for strings with a few distinct values (`status`, `currency`).
 - Done when every edit shows up in all five outputs and survives a reload.
 
-### - [ ] 4. More inputs and outputs
+### - [x] 4. More inputs and outputs
 
 - Several samples at once (tabs), merged into one schema: the best way to catch optional fields.
 - Import from a cURL command or HAR file (parse it locally; never send requests from the app).

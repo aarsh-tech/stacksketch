@@ -23,7 +23,7 @@ const XL = '(min-width: 80rem)'
 /** Pick a type: highlight it in the code, switching away from tabs that have no declarations. */
 function reveal(name: string) {
   const { output, set } = useExplorer.getState()
-  if (output === 'mock' || output === 'fetch') set({ output: 'ts' })
+  if (output === 'mock' || output === 'client') set({ output: 'ts' })
   useFocus.getState().reveal(name)
 }
 

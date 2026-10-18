@@ -12,16 +12,20 @@ Free, open source, no account, no backend. Everything runs in your browser and n
 
 ### API explorer
 
-- Paste a JSON response, open a `.json` file, or start from the sample.
+- Paste a JSON response, open `.json` files, or start from the sample.
+- **Several samples at once**: add a tab per response from the same endpoint and they merge into one schema, which is the surest way to find optional fields. A tab with broken JSON is left out until you fix it.
+- **Import from DevTools**: pick responses out of a HAR file (Network → "Save all as HAR with content"), or paste a "Copy as cURL" command to set up the client code. Both are read locally; nothing is sent.
 - **Structure tree**: every nested object as a named type, with optional and nullable fields, detected formats (`uuid`, `email`, `date-time`, `date`, `uri`) and integer vs decimal numbers. Hover a field to see sample values.
 - **Edit the schema**: click the pencil on any field to change its type or format, mark it optional, required or nullable, turn a string into an enum of its sample values, or rename the type it holds. Fields like `status` and `currency` offer "enum?" in one click. Edits live on top of inference, so they survive a reload and pasting a new sample, and every output picks them up.
 - **Graph view**: switch the Structure pane from Tree to Graph to see one card per type with an edge for each reference, laid out automatically. Click a card to highlight its declaration in the generated code. Pan and pinch-zoom by touch, and export the graph as PNG or SVG.
 - **TypeScript**: `interface` or `type`, optional `readonly`, format notes as comments.
-- **Zod 4**: schemas with `z.email()`, `z.uuid()`, `z.iso.datetime()` and friends, each with its inferred type.
+- **Validation**: Zod 4, Valibot 1 or Yup 1 schemas, each with its inferred type and the right checks for emails, UUIDs, URLs and dates.
 - **Mock data**: realistic, seeded fake data that passes its own Zod schema. It reuses real values from your sample for fields like `status` and `currency`.
-- **Fetch**: a typed `fetch` wrapper. Path params (`/users/:id` or `/users/{id}`) become arguments, and it validates the response with Zod (or just casts, if you prefer).
+- **Client code**: a typed `fetch` wrapper, an Axios function or a TanStack Query hook (`useQuery` for GET, `useMutation` otherwise). Path params (`/users/:id` or `/users/{id}`) become arguments, and the response is validated with Zod (or just cast, if you prefer).
+- **Pydantic and Go**: Pydantic v2 models with snake_case fields and aliases, and Go structs with `json` tags, pointers for nullable fields and named types for enums.
 - **JSON Schema** (draft 2020-12), ready for OpenAPI 3.1.
 - Arrays of objects are merged, so a key missing from some items becomes optional and a key that's sometimes `null` becomes nullable.
+- Big responses (over about 500 KB) are parsed in a Web Worker, so typing stays smooth.
 - Clear JSON errors with line and column ("Trailing comma before '}'"), and a click jumps to the spot.
 - Copy or download every output. Light and dark themes. Works at phone width.
 

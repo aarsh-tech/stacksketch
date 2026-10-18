@@ -23,6 +23,8 @@ interface ParsedUrl {
   params: string[]
   /** static path segments, for naming */
   segments: string[]
+  /** the path as query-key parts: static segments quoted, params as identifiers */
+  keyParts: string[]
   endsWithParam: boolean
   /** shown in error messages */
   label: string
@@ -31,6 +33,7 @@ interface ParsedUrl {
 function parseUrl(url: string): ParsedUrl {
   const params: string[] = []
   const segments: string[] = []
+  const keyParts: string[] = []
   let path = url
   try {
     path = new URL(url).pathname
@@ -51,8 +54,13 @@ function parseUrl(url: string): ParsedUrl {
   for (const part of parts) {
     const m = /^(?::(\w+)|\{(\w+)\})$/.exec(part)
     endsWithParam = Boolean(m)
-    if (m) params.push(camelCase(m[1] ?? m[2]))
-    else if (!/^v\d+$|^api$/i.test(part)) segments.push(part)
+    if (m) {
+      params.push(camelCase(m[1] ?? m[2]))
+      keyParts.push(params[params.length - 1])
+    } else if (!/^v\d+$|^api$/i.test(part)) {
+      segments.push(part)
+      keyParts.push(`'${part.replace(/[\\']/g, '\\$&')}'`)
+    }
   }
   const raw = url.replace(/[`\\]/g, '\\$&').replace(/\$\{/g, '\\${')
   let i = 0
@@ -63,7 +71,7 @@ function parseUrl(url: string): ParsedUrl {
     return p ? '${encodeURIComponent(String(' + p + '))}' : whole
   })
   const expr = params.length ? '`' + templated + '`' : `'${url.replace(/[\\']/g, '\\$&')}'`
-  return { expr, params, segments, endsWithParam, label: `/${parts.join('/')}` }
+  return { expr, params, segments, keyParts, endsWithParam, label: `/${parts.join('/')}` }
 }
 
 export function fetchFunctionName(method: HttpMethod, url: string): string {
@@ -75,31 +83,60 @@ export function fetchFunctionName(method: HttpMethod, url: string): string {
   return isIdentifier(name) ? name : 'request'
 }
 
-/** A typed fetch function for the endpoint the sample came from. */
-export function toFetch(schema: Schema, options: FetchOptions = {}): string {
+/** Everything the client generators (fetch, Axios, TanStack Query) share about one endpoint. */
+export interface Endpoint {
+  method: HttpMethod
+  fn: string
+  type: string
+  url: ParsedUrl
+  hasBody: boolean
+  validate: boolean
+  /** `storeId: string | number`, … */
+  paramArgs: string[]
+  /** the line that imports the response type (and its Zod schema when validating) */
+  importLine: string
+  /** turns `expr` (the parsed JSON) into the response type */
+  parse: (expr: string) => string
+}
+
+export function endpoint(schema: Schema, options: FetchOptions = {}): Endpoint {
   const method = options.method ?? 'GET'
   const url = options.url?.trim() || '/api/resource'
   const validate = options.validate ?? true
   const type = rootTypeName(schema)
   const parsed = parseUrl(url)
-  const fn = options.functionName && isIdentifier(options.functionName) ? options.functionName : fetchFunctionName(method, url)
-  const hasBody = method === 'POST' || method === 'PUT' || method === 'PATCH'
-
-  const args = [...parsed.params.map((p) => `${p}: string | number`), ...(hasBody ? ['body: unknown'] : []), 'init?: RequestInit']
-  const headers = hasBody ? `\n    headers: { 'Content-Type': 'application/json', ...init?.headers },\n    body: JSON.stringify(body),` : ''
-  const imports = validate ? `import { ${schemaName(type)}, type ${type} } from './schema'` : `import type { ${type} } from './types'`
-  const parse = validate ? `${schemaName(type)}.parse(await res.json())` : `(await res.json()) as ${type}`
-  const bodyNote = hasBody ? `\n// The request body is untyped for now: the API contract designer (phase 3) will type it.` : ''
-
-  return `${imports}
-${bodyNote}
-export async function ${fn}(${args.join(', ')}): Promise<${type}> {
-  const res = await fetch(${parsed.expr}, {
-    ...init,
-    method: '${method}',${headers}
-  })
-  if (!res.ok) throw new Error(\`${method} ${parsed.label.replace(/[`\\$]/g, '\\$&')} failed: \${res.status} \${res.statusText}\`)
-  return ${parse}
+  return {
+    method,
+    fn: options.functionName && isIdentifier(options.functionName) ? options.functionName : fetchFunctionName(method, url),
+    type,
+    url: parsed,
+    hasBody: method === 'POST' || method === 'PUT' || method === 'PATCH',
+    validate,
+    paramArgs: parsed.params.map((p) => `${p}: string | number`),
+    importLine: validate ? `import { ${schemaName(type)}, type ${type} } from './schema'` : `import type { ${type} } from './types'`,
+    parse: (expr) => (validate ? `${schemaName(type)}.parse(${expr})` : `(${expr}) as ${type}`),
+  }
 }
-`.replace(/\n\n\n/g, '\n\n')
+
+export const BODY_NOTE = `// The request body is untyped for now: the API contract designer (phase 3) will type it.`
+
+/** The fetch function alone, without imports. */
+export function fetchFunction(e: Endpoint): string {
+  const args = [...e.paramArgs, ...(e.hasBody ? ['body: unknown'] : []), 'init?: RequestInit']
+  const headers = e.hasBody ? `\n    headers: { 'Content-Type': 'application/json', ...init?.headers },\n    body: JSON.stringify(body),` : ''
+  return `export async function ${e.fn}(${args.join(', ')}): Promise<${e.type}> {
+  const res = await fetch(${e.url.expr}, {
+    ...init,
+    method: '${e.method}',${headers}
+  })
+  if (!res.ok) throw new Error(\`${e.method} ${e.url.label.replace(/[`\\$]/g, '\\$&')} failed: \${res.status} \${res.statusText}\`)
+  return ${e.parse('await res.json()')}
+}
+`
+}
+
+/** A typed fetch function for the endpoint the sample came from. */
+export function toFetch(schema: Schema, options: FetchOptions = {}): string {
+  const e = endpoint(schema, options)
+  return [e.importLine, ...(e.hasBody ? ['', BODY_NOTE] : []), '', fetchFunction(e)].join('\n')
 }

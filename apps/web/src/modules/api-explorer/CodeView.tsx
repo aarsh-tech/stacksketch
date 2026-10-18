@@ -1,12 +1,23 @@
 import { useEffect, useMemo, useRef } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
 import type { ReactCodeMirrorRef } from '@uiw/react-codemirror'
+import { go } from '@codemirror/lang-go'
 import { javascript } from '@codemirror/lang-javascript'
 import { json } from '@codemirror/lang-json'
+import { python } from '@codemirror/lang-python'
 import { Decoration, EditorView } from '@codemirror/view'
 
 import { useResolvedTheme } from '@/hooks/useTheme'
 import { highlight as syntax } from '@/lib/codemirror'
+
+export type CodeLang = 'ts' | 'json' | 'python' | 'go'
+
+const LANGS: Record<CodeLang, () => ReturnType<typeof json>> = {
+  ts: () => javascript({ typescript: true }),
+  json: () => json(),
+  python: () => python(),
+  go: () => go(),
+}
 
 /** 1-based inclusive lines to highlight; `nonce` changes when the user asks to see them again. */
 export interface LineRange {
@@ -16,7 +27,7 @@ export interface LineRange {
 }
 
 /** Read-only, highlighted code. */
-export function CodeView({ code, lang, label, highlight }: { code: string; lang: 'ts' | 'json'; label: string; highlight?: LineRange | null }) {
+export function CodeView({ code, lang, label, highlight }: { code: string; lang: CodeLang; label: string; highlight?: LineRange | null }) {
   const theme = useResolvedTheme()
   const editor = useRef<ReactCodeMirrorRef>(null)
   const from = highlight?.from
@@ -25,7 +36,7 @@ export function CodeView({ code, lang, label, highlight }: { code: string; lang:
 
   const extensions = useMemo(
     () => [
-      lang === 'ts' ? javascript({ typescript: true }) : json(),
+      LANGS[lang](),
       syntax,
       EditorView.editorAttributes.of({ class: 'cm-readonly' }),
       EditorView.contentAttributes.of({ 'aria-label': label }),
