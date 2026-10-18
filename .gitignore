@@ -18,3 +18,6 @@ dist-ssr
 *.suo
 *.sw?
 packages/variants/*.tgz
+
+# store packages made by pnpm release:extension
+release

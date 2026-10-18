@@ -1,4 +1,4 @@
-import type { Rect } from '@stacksketch/core'
+import type { Rect, SendRequest } from '@stacksketch/core'
 
 /** The design frame laid over the page. Positions are page pixels (they scroll with the page). */
 export interface OverlayState {
@@ -65,5 +65,19 @@ export interface PingReply {
 
 export type { StackScan as ScanReply } from '../../web/src/lib/stackingScan'
 
-/** Sites the content script runs on by default: local dev servers on any port. */
-export const DEFAULT_SITES = ['http://localhost/*', 'http://127.0.0.1/*']
+/** The hosted workbench, where the bridge relays the API client's requests. */
+export const WORKBENCH_SITE = 'https://stacksketch.netlify.app/*'
+
+/** Sites the scripts run on by default: local dev servers on any port, and the hosted workbench. */
+export const DEFAULT_SITES = ['http://localhost/*', 'http://127.0.0.1/*', WORKBENCH_SITE]
+
+/** The sites saved by the panel plus the defaults, so a default added in an update reaches people who already turned on other sites. */
+export const withDefaults = (saved: unknown): string[] => [...new Set([...DEFAULT_SITES, ...(Array.isArray(saved) ? (saved as string[]) : [])])]
+
+/** What the side panel, the bridge and the grant page ask the service worker. */
+export type ToBackground =
+  | { type: 'syncScripts' }
+  /** send an API client request (from the bridge in the workbench page) */
+  | { type: 'apiSend'; request: SendRequest }
+  /** open the prompt that allows requests to this origin */
+  | { type: 'apiGrant'; origin: string }

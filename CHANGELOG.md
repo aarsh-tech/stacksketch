@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased: the API client (phase 7)
+
+- **API client**: send requests to your real API from the workbench, with params, headers, bearer / basic / API key auth, JSON, text and form bodies, folders and environments with `{{variables}}`.
+- **Checks** on status, time, headers and body values, and **contract checks** that list every way a response breaks its contract endpoint. A response with no endpoint can be added to the contract in one click.
+- **Captured values** (a login's token, a new id) feed the next request; **run** a folder in order and download a Markdown report.
+- **Send with** Mock (from the contract, in the tab), Browser, the **extension** (no CORS; asks once per host; never sends your cookies) or **`stacksketch proxy`** (no CORS, any header; answers only the workbench, on 127.0.0.1).
+- Import cURL (pasted straight into the URL box) and Postman collections and environments; export Postman collections; open any response in the API explorer.
+
+### Extension 0.7.0, ready for the Chrome Web Store
+
+- Icons, and `pnpm release:extension`, which writes the store zip. The listing, permission justifications, privacy answers and screenshots are in `docs/chrome-web-store`; the privacy policy is at `/privacy.html` on the workbench.
+- Runs on the hosted workbench (stacksketch.netlify.app) as well as localhost out of the box, so the API client finds it there; `stacksketch proxy` accepts the hosted workbench too.
+- Fixed: the stacking inspector's 3D view was blank in the extension's side panel, because the panel's styles were built without the classes it uses.
+
 ## Unreleased: bridges (phase 6)
 
 - **DB to code**: read DBML or a Schemasketch project file and get shared-schema types, a Prisma 7 schema (PostgreSQL, MySQL, SQLite), SQL migrations for the same three, and CRUD handlers for Express or Next.js. One click adds every table to the API contract with CRUD endpoints.

@@ -1,2 +1,4 @@
 @import '../../../web/src/index.css';
 @source '../../../web/src/components/ui';
+/* the panel borrows these from the workbench, so their classes have to be generated here too */
+@source '../../../web/src/modules/stacking/StackingPanel.tsx';

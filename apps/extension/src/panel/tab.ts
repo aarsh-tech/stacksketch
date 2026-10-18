@@ -1,7 +1,7 @@
 import { useEffect, useSyncExternalStore } from 'react'
 
 import type { FromContent, PingReply, ToContent } from '../messages'
-import { DEFAULT_SITES } from '../messages'
+import { withDefaults } from '../messages'
 
 /** The page the side panel works on: the active tab of this window, and whether Stacksketch runs there. */
 export interface TabState {
@@ -42,7 +42,7 @@ const matches = (pattern: string, origin: string) => {
 
 export async function enabledSites(): Promise<string[]> {
   const { sites } = await chrome.storage.local.get('sites')
-  return Array.isArray(sites) ? (sites as string[]) : DEFAULT_SITES
+  return withDefaults(sites)
 }
 
 /* the active tab lives outside React: chrome's tab events update it, and the panel subscribes */
@@ -60,7 +60,7 @@ async function refresh() {
     let page = await sendToTab<PingReply>(t.id, { type: 'ping' })
     // turned on, but the page was open before the extension was: run the script now
     if (!page && on) {
-      await chrome.scripting.executeScript({ target: { tabId: t.id }, files: ['content.js'] }).catch(() => undefined)
+      await chrome.scripting.executeScript({ target: { tabId: t.id }, files: ['content.js', 'bridge.js'] }).catch(() => undefined)
       page = await sendToTab<PingReply>(t.id, { type: 'ping' })
     }
     state = { tab: { id: t.id, windowId: t.windowId, url: t.url ?? '', origin, connected: Boolean(page), page }, enabled: on }

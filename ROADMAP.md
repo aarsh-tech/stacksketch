@@ -128,3 +128,16 @@ Every module reads and writes the shared schema in `packages/core/src/types.ts`.
 - Sequence diagrams built from contract endpoints (login → refresh token → fetch profile), with the data each step sends.
 - Export SVG and Mermaid.
 - Done: `packages/core/src/flows/flow.ts` (`flowSequence`, `toMermaid`, `toSequenceSvg`) and the module in `apps/web/src/modules/flows/`. Each step is a contract endpoint and the response it shows (the success one, or an error to draw the failure path), with an optional note.
+
+---
+
+## Phase 7: API client (v0.7), both sides test the same requests
+
+### - [x] 16. Send requests to the real API, checked against the contract
+
+- Requests with params, headers, auth and bodies; environments with `{{variables}}`; folders; history for the session.
+- Checks on status, time, headers and body values, and a check that the response matches the contract endpoint. Values captured from a response feed the next request. A runner sends a folder in order and writes a Markdown report.
+- Gets past CORS without a server of ours: through the browser extension's service worker, or `stacksketch proxy` on the developer's machine. A mock transport answers from the contract in the tab.
+- Imports cURL and Postman collections and environments; exports Postman collections.
+- This changes the "never send requests from the app" rule from phase 1: the app still sends nothing on its own, but the API client sends the requests the user writes, to the URLs they type.
+- Done: the model is pure, in `packages/core/src/request/`: `model.ts` (building, variables, cURL, assertions, captures, requests from contract endpoints), `check.ts` (`checkShape`, `checkContract`, `findEndpoint`), `postman.ts`, `runner.ts` (`runRequests`, `runReport`), `send.ts` (`sendWithFetch`, shared by the page, the extension and the proxy) and `bridge.ts` (the page-to-extension messages). Tested in `request.test.ts`. The module is `apps/web/src/modules/api-client/` (store `stacksketch:client`). The extension adds `bridge.js` (relays the page's requests) and a grant window that asks for a host's permission; `packages/cli/src/proxy.ts` is `stacksketch proxy`, which only answers allowed origins on 127.0.0.1.

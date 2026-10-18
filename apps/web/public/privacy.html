@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Stacksketch privacy policy</title>
+    <meta name="description" content="What the Stacksketch workbench and browser extension do with your data: nothing leaves your machine unless you send it." />
+    <style>
+      :root {
+        --bg: #f4f3f0;
+        --panel: #fbfaf8;
+        --ink: #211f1d;
+        --ink-2: #5a5652;
+        --line: #e0ddd8;
+        --accent: #b24f28;
+        color-scheme: light;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #141312;
+          --panel: #1a1918;
+          --ink: #ebe8e4;
+          --ink-2: #aaa49e;
+          --line: #2d2b29;
+          --accent: #e9875c;
+          color-scheme: dark;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font: 16px/1.65 'Schibsted Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      }
+      main {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 48px 16px 64px;
+      }
+      header { border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 28px; }
+      h1 { font-size: 28px; line-height: 1.2; letter-spacing: -0.02em; margin: 0 0 8px; }
+      h2 { font-size: 18px; margin: 32px 0 8px; }
+      p, li { color: var(--ink-2); }
+      strong { color: var(--ink); }
+      ul { padding-left: 20px; }
+      li + li { margin-top: 6px; }
+      a { color: var(--accent); }
+      code { font: 0.9em 'JetBrains Mono', ui-monospace, monospace; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+      .updated { font-size: 14px; margin: 0; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Stacksketch privacy policy</h1>
+        <p class="updated">Covers the Stacksketch workbench (stacksketch.netlify.app) and the Stacksketch browser extension. Last updated 19 October 2026.</p>
+      </header>
+
+      <p><strong>Short version: Stacksketch doesn’t collect, store on a server, sell or share any of your data.</strong> There’s no account, no analytics and no tracking. Everything you do stays in your browser, and the only network requests made for you are the API requests you write and send yourself.</p>
+
+      <h2>What stays on your device</h2>
+      <ul>
+        <li>JSON you paste, schemas, forms, API contracts, saved API requests and environments are kept in your browser’s local storage. They never leave your device, and clearing your browser’s site data removes them.</li>
+        <li>The extension remembers which sites you turned it on for, in the extension’s local storage.</li>
+        <li>Design images, screenshots, comments and QA reports made with the extension stay in the browser until you download them yourself.</li>
+        <li>API responses and request history are kept in memory only and are gone when you close the tab.</li>
+      </ul>
+
+      <h2>What the extension reads</h2>
+      <ul>
+        <li>On pages you turn it on for (localhost and the Stacksketch workbench by default), it reads the page’s layout and computed styles to measure spacing and type and to explain stacking contexts, and it can take a screenshot of the visible tab when you pin a comment. This is processed in your browser and is not sent anywhere.</li>
+        <li>It doesn’t read pages you haven’t turned it on for, and it doesn’t read your browsing history, passwords or form entries.</li>
+      </ul>
+
+      <h2>API requests you send</h2>
+      <ul>
+        <li>The workbench’s API client sends requests only when you click Send or run a collection, only to the URLs you type, with the headers and body you write.</li>
+        <li>When you choose to send through the extension, its service worker makes that request for you so CORS doesn’t block it. It only reaches localhost and hosts you allowed in Chrome’s permission prompt, and it never attaches your browser’s cookies for those sites.</li>
+        <li>The responses come back to your browser only. Stacksketch has no server in between and keeps no copy.</li>
+        <li>If you use <code>stacksketch proxy</code>, it runs on your own computer and forwards your requests from there. It only answers the Stacksketch workbench and only listens on <code>127.0.0.1</code>.</li>
+      </ul>
+
+      <h2>Third parties</h2>
+      <p>None. Stacksketch has no advertising, analytics, crash reporting or other third-party services, and the extension loads no remote code. The workbench is hosted on Netlify, which serves its files like any web host.</p>
+
+      <h2>Children</h2>
+      <p>Stacksketch is a tool for software developers and isn’t aimed at children.</p>
+
+      <h2>Changes</h2>
+      <p>If this policy changes, this page will be updated and the date at the top changed. A change that sends data anywhere new would be described here before it ships.</p>
+
+      <h2>Contact</h2>
+      <p>Questions about privacy: use the support contact on the Stacksketch Chrome Web Store listing.</p>
+
+      <p><a href="/">Open the Stacksketch workbench</a></p>
+    </main>
+  </body>
+</html>

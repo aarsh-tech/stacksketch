@@ -6,11 +6,13 @@ import { parse as parseYaml } from 'yaml'
 
 import { createMockApi, readContractFile } from '@stacksketch/core'
 import type { MockApi, MockServerOptions } from '@stacksketch/core'
+import { PROXY_HELP, parseProxyArgs, startProxy } from './proxy'
 
-const HELP = `Stacksketch: a mock API from your contract.
+const HELP = `Stacksketch: a mock API from your contract, and a proxy for the workbench's API client.
 
 Usage
   stacksketch mock <file> [options]
+  stacksketch proxy [options]       (stacksketch proxy --help for its options)
 
 <file> is a contract exported from the workbench (contract.json) or an
 OpenAPI 3.0 / 3.1 file (JSON or YAML).
@@ -26,7 +28,10 @@ Options
 
 While it runs, add ?__status=500 or ?__delay=2000 to any request (or send
 x-mock-status / x-mock-delay headers) to try error and loading states.
-The file is watched: save it and the server reloads.`
+The file is watched: save it and the server reloads.
+
+stacksketch proxy sends the workbench's API client requests from your
+machine, so APIs without CORS and any header work.`
 
 const c = process.stdout.isTTY ? (code: number) => (s: string) => `\x1b[${code}m${s}\x1b[0m` : () => (s: string) => s
 const dim = c(2)
@@ -54,7 +59,7 @@ function parseArgs(argv: string[]): Args {
     process.exit(0)
   }
   const [command, ...rest] = argv
-  if (command !== 'mock') fail(`Unknown command "${command}". Run stacksketch mock <file>, or stacksketch --help.`)
+  if (command !== 'mock') fail(`Unknown command "${command}". Run stacksketch mock <file>, stacksketch proxy, or stacksketch --help.`)
   let file = ''
   let port = 4010
   let host = 'localhost'
@@ -110,7 +115,16 @@ function readBody(req: IncomingMessage): Promise<string> {
 const statusColour = (s: number) => (s >= 500 ? red : s >= 400 ? yellow : green)
 
 function main() {
-  const args = parseArgs(process.argv.slice(2))
+  const argv = process.argv.slice(2)
+  if (argv[0] === 'proxy') {
+    if (argv.includes('--help') || argv.includes('-h')) {
+      console.log(PROXY_HELP)
+      return
+    }
+    startProxy(parseProxyArgs(argv.slice(1), fail), { line: (s) => console.log(s), error: fail, dim, cyan, bold, status: (n) => statusColour(n)(String(n)) })
+    return
+  }
+  const args = parseArgs(argv)
   let current: { api: MockApi; title: string }
   try {
     current = load(args.file, args.options)

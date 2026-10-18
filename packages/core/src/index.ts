@@ -147,3 +147,58 @@ export type { PrismaProvider, SqlDialect } from './db/generate'
 
 export { flowSequence, LIGHT_PALETTE, requestText, responseText, starterFlow, stepStatuses, toMermaid, toSequenceSvg } from './flows/flow'
 export type { Flow, FlowStep, Sequence, SequenceMessage, SvgPalette } from './flows/flow'
+
+export type {
+  ApiRequest,
+  Assertion,
+  AssertionOp,
+  AssertionTarget,
+  BodyKind,
+  BuiltRequest,
+  Capture,
+  Environment,
+  KeyValue,
+  RequestAuth,
+  RequestBodyInput,
+  SendRequest,
+  SendResult,
+  SuccessfulResult,
+} from './request/types'
+export {
+  assertionLabel,
+  buildRequest,
+  collectionFromContract,
+  emptyRequest,
+  formatBytes,
+  headerValue,
+  interpolate,
+  OPS_FOR,
+  opWords,
+  REQUEST_METHODS,
+  requestFromCurl,
+  requestFromEndpoint,
+  requestProblem,
+  responseJson,
+  runAssertions,
+  runCaptures,
+  sampleParamValue,
+  sendsBody,
+  setVariables,
+  splitQuery,
+  toCurl,
+  toFetchSnippet,
+  valueAtPath,
+  variablesOf,
+  variablesUsed,
+} from './request/model'
+export type { AssertionResult } from './request/model'
+export { checkContract, checkShape, findEndpoint, responseFor } from './request/check'
+export type { ContractCheck, ContractIssue } from './request/check'
+export { fromPostmanCollection, fromPostmanEnvironment, toPostmanCollection } from './request/postman'
+export type { PostmanImport } from './request/postman'
+export { runReport, runRequests } from './request/runner'
+export type { RunOptions, RunStep } from './request/runner'
+export { DEFAULT_TIMEOUT, sendWithFetch } from './request/send'
+export type { SendContext } from './request/send'
+export { FROM_APP, FROM_EXTENSION, isFromApp, isFromExtension } from './request/bridge'
+export type { AppToExtension, ExtensionToApp } from './request/bridge'

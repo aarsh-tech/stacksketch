@@ -1,10 +1,11 @@
-import { Braces, Crosshair, Database, FormInput, LayoutGrid, Layers, Server, Waypoints, Workflow } from 'lucide-react'
+import { Braces, Crosshair, Database, FormInput, LayoutGrid, Layers, SendHorizontal, Server, Waypoints, Workflow } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 export type ModuleId =
   | 'api-explorer'
   | 'form-builder'
   | 'contract'
+  | 'api-client'
   | 'mock-server'
   | 'qa-overlay'
   | 'stacking'
@@ -80,6 +81,23 @@ export const MODULES: ModuleInfo[] = [
     connects: 'Feeds the mock server and types the request bodies in generated fetch functions.',
   },
   {
+    id: 'api-client',
+    name: 'API client',
+    icon: SendHorizontal,
+    phase: 7,
+    ready: true,
+    audience: 'both',
+    surface: 'workbench',
+    summary: 'Send requests to your real API, check every response against the contract, and run them all in order.',
+    details: [
+      'Requests with params, headers, bearer, basic or API key auth and JSON, text or form bodies; environments fill {{variables}}.',
+      'Checks on status, time, headers and body values, plus a check that the response matches the API contract.',
+      'Save a login’s token or a new id into the environment, and run a whole folder in order with a Markdown report.',
+      'Send from the page, or through the browser extension or stacksketch proxy to get past CORS. Imports Postman collections and cURL.',
+    ],
+    connects: 'Makes requests from the API contract, checks responses against it, adds missing endpoints to it, and opens responses in the API explorer.',
+  },
+  {
     id: 'mock-server',
     name: 'Mock API server',
     icon: Server,
@@ -119,7 +137,7 @@ export const MODULES: ModuleInfo[] = [
     setup: [
       'Build it: pnpm build (the extension lands in apps/extension/dist).',
       'In Chrome, open chrome://extensions, turn on Developer mode, click "Load unpacked" and pick apps/extension/dist.',
-      'Click the Stacksketch button in the toolbar to open the side panel. It runs on localhost by default; turn it on for other sites from the panel.',
+      'Click the Stacksketch button in the toolbar to open the side panel. It runs on localhost and the hosted workbench by default; turn it on for other sites from the panel.',
     ],
   },
   {
@@ -140,7 +158,7 @@ export const MODULES: ModuleInfo[] = [
     setup: [
       'Build it: pnpm build (the extension lands in apps/extension/dist).',
       'In Chrome, open chrome://extensions, turn on Developer mode, click "Load unpacked" and pick apps/extension/dist.',
-      'Click the Stacksketch button in the toolbar to open the side panel. It runs on localhost by default; turn it on for other sites from the panel.',
+      'Click the Stacksketch button in the toolbar to open the side panel. It runs on localhost and the hosted workbench by default; turn it on for other sites from the panel.',
     ],
   },
   {

@@ -1,6 +1,6 @@
 # Stacksketch: notes for Claude Code
 
-Stacksketch is one local workbench for the contract between frontend and backend. Phase 1 is the API explorer: paste a JSON response, get TypeScript, Zod, mock data, a typed fetch function and JSON Schema. Phase 2 is the form builder; phase 3 is the API contract designer and the mock server CLI (both built). It's a static React app with **no backend and no database**; state lives in `localStorage`. It deploys to Netlify. The plan is in `ROADMAP.md`.
+Stacksketch is one local workbench for the contract between frontend and backend. Phase 1 is the API explorer: paste a JSON response, get TypeScript, Zod, mock data, a typed fetch function and JSON Schema. Phase 2 is the form builder; phase 3 is the API contract designer and the mock server CLI (both built); phase 7 is the API client. It's a static React app with **no backend and no database**; state lives in `localStorage`. It deploys to Netlify. The plan is in `ROADMAP.md`.
 
 It's a sibling of Schemasketch (`D:\Personal_Projects\schemasketch`) and shares its stack, conventions and look.
 
@@ -15,6 +15,7 @@ pnpm test        # Vitest in packages/core
 pnpm typecheck   # every package
 pnpm lint        # oxlint; keep it at zero warnings
 pnpm build       # apps/web → apps/web/dist; must pass before you say a task is done
+pnpm release:extension  # Chrome Web Store zip → release/; listing texts in docs/chrome-web-store
 ```
 
 ## Monorepo
@@ -44,14 +45,16 @@ packages/core/                    @stacksketch/core: pure TypeScript, no DOM, no
   src/contract/                   the API contract: types, model (paths, names, problems, usableContract, addSchemaEndpoint), shapes (the type picker's parts), generate (types, Zod, typed client)
   src/openapi/                    toOpenApi, fromOpenApi (3.0 and 3.1, takes a parsed object), toYaml
   src/mock/api.ts                 createMockApi (pure request → response for the mock server), readContractFile
-apps/extension/                   phase 4: Chrome MV3. src/content.ts (shadow-root overlay, measure, pins, stacking scan), src/background.ts, src/panel/ (React side panel; reuses apps/web's primitives and tokens through the @ alias); vite builds the panel, build.mjs the IIFE scripts
+  src/request/                    the API client: types, model (build, variables, cURL, assertions, captures, from contract endpoints), check (checkShape, checkContract, findEndpoint), postman, runner, send (sendWithFetch, shared by page/extension/proxy), bridge (page ↔ extension messages)
+apps/extension/                   phase 4: Chrome MV3. src/content.ts (shadow-root overlay, measure, pins, stacking scan), src/bridge.ts (relays the API client's requests), src/background.ts (also sends them, CORS-free), src/panel/ (React side panel; reuses apps/web's primitives and tokens through the @ alias); vite builds the panel, build.mjs the IIFE scripts
   src/inspect/ (in core)          stackingReasons, stackingTree, compareStacking, gapBetween, checkType, qaReport
 packages/variants/                phase 5: props.ts (TypeScript compiler reads components and props), vite.ts (plugin, /__variants), next.ts (writes a dev-only page), canvas.tsx + mount.tsx (React grid); built by build.mjs; fixture/ is a demo app
   src/variants/grid.ts (in core)  defaultAxes, defaultArgs, variantGrid; src/form/sample.ts sampleFormValues for the form states view
   src/db/ (in core)               dbml.ts (parseDbml, readSchemasketchFile), generate.ts (tablesToTypes, toPrisma, toSqlMigration, dbCrudContract, toExpressRoutes, toNextRoutes)
   src/flows/ (in core)            flowSequence, toMermaid, toSequenceSvg
   apps/web modules                db-code/DbCode.tsx (store: stacksketch:db), flows/Flows.tsx (store: stacksketch:flows)
-packages/cli/                     `stacksketch mock <file>`: Node http wrapper around createMockApi, bundled by esbuild (build.mjs) into dist/cli.js
+  apps/web api-client/            phase 7: ApiClient.tsx (three panes), RequestList, RequestEditor, ResponseView, Dialogs (environments, import, runner, CORS help), transport.ts (mock, browser, extension bridge, proxy); store: stacksketch:client, history in memory
+packages/cli/                     `stacksketch mock <file>`: Node http wrapper around createMockApi; `stacksketch proxy` (src/proxy.ts) sends the API client's requests; bundled by esbuild (build.mjs) into dist/cli.js
   src/form/                       the form model (types, model), formFromSchema, toFormZod (+ formZodRuntime for the preview), toFormComponent (react.ts), formToSchema
   src/core.test.ts                Vitest; the Zod tests eval the generated code against real zod
   src/form.test.ts                form model and generator tests; typecheck.testutil.ts runs strict tsc on generated code
@@ -65,10 +68,10 @@ packages/cli/                     `stacksketch mock <file>`: Node http wrapper a
 - **One schema format.** New modules consume and produce `Schema` from `packages/core/src/types.ts`. Need more? Extend it, bump `version`, and keep old data loading. Never add a parallel format.
 - **Logic goes in `packages/core`, UI goes in `apps/web`.** Inference, generators, OpenAPI, form models: pure functions in core, with tests. Components only call them.
 - **Generated code must compile and run.** Every generator has a test that proves it (the Zod tests run the output; add a `tsc` check when you add a generator that emits TypeScript).
-- **Nothing leaves the browser.** No analytics, no remote fetches of user data, no "fetch this URL" feature that sends requests from the app. Imports read local files or pasted text.
+- **Nothing leaves the browser unless the user sends it.** No analytics, no remote fetches of user data, no servers of ours. Imports read local files or pasted text. The one thing that sends requests is the API client, and only the requests the user writes, to the URLs they type, from the page, the extension (no cookies attached) or `stacksketch proxy` on their own machine (allowed origins only, bound to 127.0.0.1).
 - **Heavy libraries are lazy-loaded** with dynamic `import()`. Keep the main bundle small.
 - **Never call setState inside an effect.** oxlint flags it. Derive values during render, or remount with a `key`.
-- **Persisted shapes** (`stacksketch:ui`, `stacksketch:explorer`, `stacksketch:forms`, `stacksketch:contract`, `stacksketch:db`, `stacksketch:flows`): when you change one, bump the persist `version` and add a `migrate`.
+- **Persisted shapes** (`stacksketch:ui`, `stacksketch:explorer`, `stacksketch:forms`, `stacksketch:contract`, `stacksketch:db`, `stacksketch:flows`, `stacksketch:client`): when you change one, bump the persist `version` and add a `migrate`.
 - **Adding a module**: set `ready: true` in `modules/registry.ts`, put it in `src/modules/<id>/`, and route it in `App.tsx`.
 
 ## UI conventions

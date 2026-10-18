@@ -1,7 +1,7 @@
 {
   "name": "stacksketch",
   "version": "0.1.0",
-  "description": "Serve a mock API from a Stacksketch contract or an OpenAPI file: npx stacksketch mock contract.json",
+  "description": "Serve a mock API from a Stacksketch contract or an OpenAPI file (npx stacksketch mock contract.json), and send the workbench API client's requests without CORS (npx stacksketch proxy).",
   "license": "MIT",
   "type": "module",
   "bin": {

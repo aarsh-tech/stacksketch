@@ -11,6 +11,7 @@ import { useUi } from '@/store/ui'
 // drag and drop only loads when the form builder opens
 const FormBuilder = lazy(() => import('@/modules/form-builder/FormBuilder'))
 const ContractDesigner = lazy(() => import('@/modules/contract/ContractDesigner'))
+const ApiClient = lazy(() => import('@/modules/api-client/ApiClient'))
 const DbCode = lazy(() => import('@/modules/db-code/DbCode'))
 const Flows = lazy(() => import('@/modules/flows/Flows'))
 const MockServer = lazy(() => import('@/modules/mock-server/MockServer'))
@@ -19,7 +20,7 @@ const Stacking = lazy(() => import('@/modules/stacking/Stacking'))
 // sucrase, which compiles the pasted component, loads when this opens
 const Variants = lazy(() => import('@/modules/variants/Variants'))
 
-const LAZY = { 'form-builder': FormBuilder, contract: ContractDesigner, 'db-code': DbCode, flows: Flows, 'mock-server': MockServer, 'qa-overlay': QaOverlay, stacking: Stacking, variants: Variants } as const
+const LAZY = { 'form-builder': FormBuilder, contract: ContractDesigner, 'api-client': ApiClient, 'db-code': DbCode, flows: Flows, 'mock-server': MockServer, 'qa-overlay': QaOverlay, stacking: Stacking, variants: Variants } as const
 
 function CurrentModule() {
   const module = useUi((s) => moduleById(s.module))

@@ -1,13 +1,44 @@
 {
   "manifest_version": 3,
   "name": "Stacksketch",
-  "version": "0.4.0",
-  "description": "Lay a Figma frame over your page, measure spacing and type, pin QA comments, and see why your modal is behind the header.",
+  "version": "0.7.0",
+  "description": "Check your page against the Figma design, see why z-index fails, and send the Stacksketch workbench's API requests without CORS.",
   "minimum_chrome_version": "116",
-  "action": { "default_title": "Open Stacksketch" },
-  "side_panel": { "default_path": "sidepanel.html" },
-  "background": { "service_worker": "background.js" },
-  "permissions": ["sidePanel", "storage", "scripting", "activeTab", "tabs"],
-  "host_permissions": ["http://localhost/*", "http://127.0.0.1/*"],
-  "optional_host_permissions": ["http://*/*", "https://*/*"]
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_title": "Open Stacksketch",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png"
+    }
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "sidePanel",
+    "storage",
+    "scripting",
+    "activeTab",
+    "tabs"
+  ],
+  "host_permissions": [
+    "http://localhost/*",
+    "http://127.0.0.1/*",
+    "https://stacksketch.netlify.app/*"
+  ],
+  "optional_host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "homepage_url": "https://stacksketch.netlify.app"
 }

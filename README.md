@@ -4,7 +4,7 @@
 
 Paste an API response and get TypeScript types, a Zod, Valibot or Yup schema, realistic mock data, a typed fetch, Axios or TanStack Query client, JSON Schema, Pydantic models and Go structs in one go. The form builder turns any of those types into a form with validation and conditional fields, and the API contract designer puts them on endpoints and exports OpenAPI 3.1 and a typed client. Later phases add a mock API server and a browser extension for pixel-perfect QA, all reading the same shared schema.
 
-Free, open source, no account, no backend. Everything runs in your browser and nothing you paste is uploaded.
+Free, open source, no account, no backend. Everything runs in your browser and nothing you paste is uploaded. The only requests the app sends are the ones you send yourself from the API client, to URLs you type.
 
 > Status: **v0.1.0, phase 1** (API explorer), with phase 2 (the form builder) and the first half of phase 3 (the API contract designer) built and waiting for their release. See [CHANGELOG.md](CHANGELOG.md) for what's in it and [ROADMAP.md](ROADMAP.md) for what's next.
 
@@ -60,6 +60,33 @@ Free, open source, no account, no backend. Everything runs in your browser and n
 - **Mock server**: set a delay or a forced status per endpoint, download `contract.json`, and serve it (see below).
 - Problems are listed and marked in the list (a duplicate route, a query param that's an object, a body on a GET, a type that's gone); those parts are left out of the code until they're fixed, so the code always compiles.
 
+### API client
+
+Send requests to your real API from the workbench, so backend and frontend developers test the same requests in one place instead of switching to Postman.
+
+- **Requests** with method, URL, query params, headers, auth (bearer, basic, API key in a header or the query) and a JSON, text or form body. Saved in your browser, grouped into folders, searchable, duplicated in a click.
+- **Environments** fill `{{variables}}` anywhere in a request: `{{baseUrl}}` is localhost in one and staging in another. A missing variable is pointed out before you send.
+- **Checks** on every response: status, time, a header, or a value in the body by path (`data.items[0].id` equals, contains, exists, matches a regex, is less than…).
+- **Checked against the API contract**: each response is matched to its contract endpoint (linked, or found from the URL) and every way it breaks the contract is listed, like `$.orders[0].total: Expected number, got the string "12.50"`, or a status the contract doesn't list. A response with no endpoint yet can be added to the contract in one click, with the status that came back.
+- **Save values for the next request**: copy a login's token or a new order's id out of a response into the environment, so the next request uses `{{token}}`.
+- **Run them all in order**: a whole collection or folder, with values passed along, stop-on-failure, and a Markdown report to paste into a pull request.
+- **Four ways to send**, picked at the top:
+  - **Mock** answers from the API contract right in the tab, so the frontend can work before the backend exists.
+  - **Browser** sends straight from the page; it works when the API allows the workbench (CORS).
+  - **Extension** sends through the Stacksketch browser extension, which isn't limited by CORS. localhost works straight away; any other host asks you once. It never attaches your browser's cookies.
+  - **Proxy** sends through `stacksketch proxy` on your machine: no CORS, and every header (Cookie included).
+- **Bring what you have**: paste a cURL command into the URL box, import a Postman collection or environment (v2.0 and v2.1), or make one request per contract endpoint. Export everything as a Postman collection.
+- **Into the rest of the workbench**: open a response in the API explorer for its types, Zod and mock data; see the exact request as cURL or `fetch`.
+- Responses and history stay in memory for the session; requests and environments are saved in this browser only.
+
+```bash
+pnpm build
+node packages/cli/dist/cli.js proxy                                                # http://localhost:4011
+node packages/cli/dist/cli.js proxy --allow-origin https://your-workbench.example   # when the workbench isn't on localhost
+```
+
+The proxy only answers the workbench (localhost:5174 and :4174 by default, plus any `--allow-origin`) and only listens on 127.0.0.1.
+
 ### Mock API server
 
 In the workbench, the **Mock API server** page sends requests to a fake API made from the current contract, right in the browser: pick a route, edit the body, force a status (401, 404, 500…) or a delay, and see the response with its headers. POST then GET returns what you created. Each request shows the matching `curl` command for the CLI, which serves the same API on localhost:
@@ -80,9 +107,9 @@ node packages/cli/dist/cli.js mock contract.json    # npx stacksketch mock contr
 - **QA overlay**: drop (or paste) a screenshot of your page and the Figma export. Compare them as an overlay (opacity, difference blending), a swipe, or the differing pixels in red; the areas that drift are found and boxed for you. Drag or arrow-key the design into place, measure boxes, pin comments (each keeps a cropped screenshot) and download the Markdown QA report. **Try it with a sample** shows it on a product card.
 - **Stacking inspector**: paste HTML and CSS, and the preview is scanned into the same exploded 3D stack and back-to-front list as the extension's. Click an element in the preview to find the context it paints in. The sample is the classic modal with `z-index: 9999` stuck behind a header with `z-index: 10`.
 
-### Browser extension (QA overlay and stacking inspector)
+### Browser extension (QA overlay, stacking inspector and API requests)
 
-Build it with `pnpm build`, then in Chrome open `chrome://extensions`, turn on Developer mode, click **Load unpacked** and pick `apps/extension/dist`. The toolbar button opens the side panel. It runs on `localhost` and `127.0.0.1` by default; turn it on for any other site from the panel.
+It's on its way to the Chrome Web Store. Until it's listed, build it with `pnpm build`, then in Chrome open `chrome://extensions`, turn on Developer mode, click **Load unpacked** and pick `apps/extension/dist`. The toolbar button opens the side panel. It runs on `localhost`, `127.0.0.1` and the hosted workbench (`stacksketch.netlify.app`) by default; turn it on for any other site from the panel.
 
 - **Overlay**: open a Figma frame export (PNG) and lay it over the page, with an opacity slider, difference blending (matching pixels go black), @2x / @3x scale, and arrow-key nudging (Shift for 10px). Lock it to an element so it follows that element instead of the page.
 - **Measure**: hover for an element's size, font, size and line height; click one, then hover another to see the gap between them, drawn on the page. Type the design's values to check font size, line height, weight and letter spacing.
@@ -154,7 +181,10 @@ pnpm test       # unit tests (packages/core)
 pnpm typecheck
 pnpm lint
 pnpm build      # builds apps/web into apps/web/dist
+pnpm release:extension   # the extension's Chrome Web Store zip, in release/
 ```
+
+[docs/chrome-web-store](docs/chrome-web-store/README.md) has the store listing, permission justifications and screenshots.
 
 ## How the repo is laid out
 
@@ -165,7 +195,7 @@ packages/
   core/             @stacksketch/core: the shared schema format, inference and code generators (pure TypeScript, no DOM)
 ```
 
-`packages/cli` is the mock API server (`stacksketch mock`) `apps/extension` the browser extension (QA overlay and stacking inspector), and `packages/variants` the variant canvas (Vite plugin and Next.js wrapper).
+`packages/cli` is the mock API server (`stacksketch mock`) and the API client's proxy (`stacksketch proxy`), `apps/extension` the browser extension (QA overlay, stacking inspector, and sending the API client's requests without CORS), and `packages/variants` the variant canvas (Vite plugin and Next.js wrapper).
 
 ## The shared schema
 

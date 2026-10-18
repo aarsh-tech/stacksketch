@@ -5,6 +5,7 @@ import '@fontsource-variable/jetbrains-mono'
 
 import './panel.css'
 import { App } from './App'
+import { Grant } from './Grant'
 
 // follow the browser's light or dark setting
 const media = matchMedia('(prefers-color-scheme: dark)')
@@ -12,8 +13,7 @@ const applyTheme = () => (document.documentElement.dataset.theme = media.matches
 applyTheme()
 media.addEventListener('change', applyTheme)
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+// the same page doubles as the small window that asks to allow an API's host
+const grant = new URLSearchParams(location.search).get('grant')
+
+createRoot(document.getElementById('root')!).render(<StrictMode>{grant ? <Grant origin={grant} /> : <App />}</StrictMode>)
