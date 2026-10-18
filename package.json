@@ -1,0 +1,24 @@
+{
+  "name": "stacksketch",
+  "private": true,
+  "version": "0.1.0",
+  "description": "One local workbench for the contract between frontend and backend: JSON to types, forms, mock APIs, QA overlays and more.",
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @stacksketch/web dev",
+    "build": "pnpm -r build",
+    "preview": "pnpm --filter @stacksketch/web preview",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "oxlint",
+    "test": "pnpm -r test"
+  },
+  "devDependencies": {
+    "oxlint": "^1.81.0",
+    "typescript": "~6.0.2"
+  }
+}
