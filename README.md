@@ -2,11 +2,11 @@
 
 **One local workbench for the contract between frontend and backend.**
 
-Paste an API response and get TypeScript types, a Zod, Valibot or Yup schema, realistic mock data, a typed fetch, Axios or TanStack Query client, JSON Schema, Pydantic models and Go structs in one go. Later phases add a form builder, an API contract designer, a mock API server and a browser extension for pixel-perfect QA, all reading the same shared schema.
+Paste an API response and get TypeScript types, a Zod, Valibot or Yup schema, realistic mock data, a typed fetch, Axios or TanStack Query client, JSON Schema, Pydantic models and Go structs in one go. The form builder turns any of those types into a form with validation and conditional fields. Later phases add an API contract designer, a mock API server and a browser extension for pixel-perfect QA, all reading the same shared schema.
 
 Free, open source, no account, no backend. Everything runs in your browser and nothing you paste is uploaded.
 
-> Status: **v0.1.0, phase 1** (API explorer). See [CHANGELOG.md](CHANGELOG.md) for what's in it and [ROADMAP.md](ROADMAP.md) for what's next.
+> Status: **v0.1.0, phase 1** (API explorer), with phase 2 (the form builder) under way. See [CHANGELOG.md](CHANGELOG.md) for what's in it and [ROADMAP.md](ROADMAP.md) for what's next.
 
 ![Pasting a response, flipping through the outputs, picking a type on the graph and turning a field into an enum](docs/screenshots/demo.gif)
 
@@ -34,6 +34,18 @@ Free, open source, no account, no backend. Everything runs in your browser and n
 - Big responses (over about 500 KB) are parsed in a Web Worker, so typing stays smooth.
 - Clear JSON errors with line and column ("Trailing comma before '}'"), and a click jumps to the spot.
 - Copy or download every output. Light and dark themes. Works at phone width.
+
+### Form builder
+
+- **Drag fields onto a form**: text (plain, email, URL, phone, password), paragraph, number, dropdown, radio, checkbox, date (with or without a time) and file. Drag from the list, or click to add below the selected field.
+- **Reorder** by dragging a field's handle, from the keyboard (focus the handle, Space, arrow keys, Space), or with Alt + ↑ / ↓ on a selected field.
+- **Sections and steps**: drop a Section to group the fields below it under a heading, or a Step to start a new page of a multi-step form.
+- **Start from a type**: pick any type the API explorer found (with your schema edits) and get its fields with types and required-ness filled in. Nested objects become sections with dotted keys (`buyer.email`). Lists, mixed types and server-set keys like `id` and `createdAt` are left out, and the dialog says why.
+- **Validation per field**: required, min and max (characters for text, the value for numbers, megabytes for files), a regex pattern, and your own message for each rule. Default messages are plain English, built from the label ("Enter GST number").
+- **Conditional fields**: show a field only when another one is, isn't, is filled in or is empty ("show GST number only if business type is company"). It's only required while it shows.
+- **Zod schema** for the form's values, with every rule and message. Conditional fields are checked when they show, even while other fields still have errors, so multi-step forms validate step by step.
+- Problems are marked on the form (a duplicate key, a regex that doesn't compile, a condition on a field that's gone), and the code leaves those parts out until they're fixed, so it always compiles.
+- Several forms, kept in your browser. Delete a field or a form and undo it from the toast.
 
 ## Run it locally
 
@@ -72,7 +84,7 @@ Every module speaks one format, defined in `packages/core/src/types.ts`. Objects
 { version: 1, rootName: 'OrdersResponse', root: { kind: 'ref', name: 'OrdersResponse' }, types: [/* Order, Buyer, … */] }
 ```
 
-The API explorer creates it, the form builder will turn it into fields, and the contract designer will attach it to endpoints. That's what lets a response become types, then a form, then a mocked endpoint, without retyping anything.
+The API explorer creates it, the form builder turns it into fields (and gives one back for the form's values), and the contract designer will attach it to endpoints. That's what lets a response become types, then a form, then a mocked endpoint, without retyping anything.
 
 ## Sibling project
 

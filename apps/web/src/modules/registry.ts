@@ -50,10 +50,10 @@ export const MODULES: ModuleInfo[] = [
     name: 'Form builder',
     icon: FormInput,
     phase: 2,
-    ready: false,
+    ready: true,
     audience: 'frontend',
     surface: 'workbench',
-    summary: 'Drag fields onto a canvas and export React Hook Form + Zod + Tailwind code.',
+    summary: 'Drag fields onto a canvas, set validation and when each one shows, and get a Zod schema for it.',
     details: [
       'Start from a schema made in the API explorer: fields, types and validation are filled in for you.',
       'Conditional fields ("show GST number only if business type is company") and multi-step forms.',

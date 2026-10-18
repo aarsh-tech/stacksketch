@@ -2,7 +2,6 @@
 import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import ts from 'typescript'
 import * as v from 'valibot'
 import { describe, expect, it } from 'vitest'
 import * as yup from 'yup'
@@ -27,6 +26,7 @@ import {
   toZod,
 } from './index'
 import type { Schema } from './index'
+import { typecheck } from './typecheck.testutil'
 
 const orders = {
   page: 1,
@@ -109,30 +109,6 @@ describe('yup', () => {
     expect(check(root, { ...orders, orders: [{ ...orders.orders[0], status: null }] })).toEqual([])
   })
 })
-
-/** Type-check virtual files with the real compiler, resolving packages from this package's node_modules. */
-function typecheck(files: Record<string, string>): string[] {
-  const dir = fileURLToPath(new URL('./__tsc__/', import.meta.url)).replace(/\\/g, '/')
-  const virtual = new Map(Object.entries(files).map(([name, code]) => [dir + name, code]))
-  const options: ts.CompilerOptions = {
-    strict: true,
-    noEmit: true,
-    target: ts.ScriptTarget.ES2022,
-    module: ts.ModuleKind.ESNext,
-    moduleResolution: ts.ModuleResolutionKind.Bundler,
-    lib: ['lib.es2022.d.ts', 'lib.dom.d.ts'],
-    skipLibCheck: true,
-    types: [],
-  }
-  const host = ts.createCompilerHost(options)
-  const { getSourceFile, fileExists, readFile } = host
-  host.getSourceFile = (name, lang, ...rest) => (virtual.has(name) ? ts.createSourceFile(name, virtual.get(name) as string, lang) : getSourceFile.call(host, name, lang, ...rest))
-  host.fileExists = (name) => virtual.has(name) || fileExists.call(host, name)
-  host.directoryExists = (name) => [...virtual.keys()].some((f) => f.startsWith(`${name.replace(/\/$/, '')}/`)) || ts.sys.directoryExists(name)
-  host.readFile = (name) => virtual.get(name) ?? readFile.call(host, name)
-  const program = ts.createProgram([...virtual.keys()], options, host)
-  return ts.getPreEmitDiagnostics(program).map((d) => `${d.file?.fileName.slice(dir.length) ?? ''}: ${ts.flattenDiagnosticMessageText(d.messageText, '\n')}`)
-}
 
 describe('TypeScript outputs compile', () => {
   it('types, Zod, Valibot, Yup, fetch, Axios and TanStack Query', () => {

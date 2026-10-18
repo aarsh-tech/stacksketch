@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased: the form builder (phase 2)
+
+- **Form builder**, a new module. Drag text, paragraph, number, dropdown, radio, checkbox, date and file fields onto a form, reorder them by mouse, touch or keyboard, and group them into sections and steps.
+- **New form from a type**: pick a type from the API explorer and its fields come in with their types and required-ness; nested objects become sections. What's left out (lists, mixed types, `id`, `createdAt`) is listed with the reason.
+- Per-field validation (required, min, max, pattern) with custom messages, and conditional visibility ("show GST number only if business type is company").
+- A Zod 4 schema for the form's values. Its tests run it against real Zod and type-check it under strict `tsc`, including forms with problems still to fix.
+
 ## v0.1.0: the API explorer (2026-10-18)
 
 The first release of Stacksketch: paste an API response and get the code both sides of the contract need. It runs entirely in your browser. Nothing you paste or import is uploaded, and no request is ever sent from the app.

@@ -48,12 +48,13 @@ Every module reads and writes the shared schema in `packages/core/src/types.ts`.
 
 ## Phase 2: Form builder (v0.2)
 
-### - [ ] 6. Canvas form builder
+### - [x] 6. Canvas form builder
 
 - Drag fields (text, number, select, radio, checkbox, date, file, textarea) onto a form canvas; reorder by dragging; group into sections and steps.
 - "New form from schema": pick a type from the API explorer and get its fields with types and validation already set.
 - Validation rules per field (required, min/max, pattern, custom message), mapped to Zod.
 - Conditional visibility ("show GST number only if business type is company").
+- Done: forms live in `packages/core/src/form/` (model, `formFromSchema`, `toFormZod`, `formToSchema`) and the module in `apps/web/src/modules/form-builder/`. A form is a flat list of fields with section and step markers; each field's value maps to a shared-schema `Shape`.
 
 ### - [ ] 7. Form code export
 

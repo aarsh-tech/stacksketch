@@ -36,3 +36,48 @@ export { snakeCase, toPydantic } from './generate/pydantic'
 export { goName, toGo } from './generate/go'
 export { parseCurl, parseHar } from './importers'
 export type { CurlRequest, HarEntry } from './importers'
+
+export type {
+  ChoiceOption,
+  Condition,
+  ConditionOp,
+  FieldMessages,
+  FieldRules,
+  Form,
+  FormField,
+  FormItem,
+  SectionBreak,
+  StepBreak,
+  TextKind,
+  Widget,
+} from './form/types'
+export {
+  createField,
+  defaultOptions,
+  emptyForm,
+  fieldsOf,
+  formProblems,
+  humanize,
+  insertItem,
+  isValidKey,
+  keyFromLabel,
+  layoutOf,
+  messagesOf,
+  moveItem,
+  patternError,
+  removeItem,
+  renameKey,
+  ruleUnit,
+  stepIndexOf,
+  uniqueKey,
+  updateItem,
+  usableCondition,
+  usableFields,
+  valueTree,
+  withWidget,
+} from './form/model'
+export type { FormProblem, LayoutSection, LayoutStep, ValueNode } from './form/model'
+export { formFromSchema } from './form/fromSchema'
+export type { SkippedField } from './form/fromSchema'
+export { formSchemaName, formValuesName, regexLiteral, toFormZod } from './form/zod'
+export { formToSchema } from './form/toSchema'
