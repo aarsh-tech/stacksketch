@@ -1,4 +1,4 @@
-import { useDeferredValue, useMemo, useRef, useState } from 'react'
+import { Suspense, lazy, useDeferredValue, useMemo, useRef, useState } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
 import type { ReactCodeMirrorRef } from '@uiw/react-codemirror'
 import { json } from '@codemirror/lang-json'
@@ -6,24 +6,27 @@ import { Decoration, EditorView } from '@codemirror/view'
 import { AlignLeft, Braces, Check, ChevronsDownUp, ChevronsUpDown, CircleAlert, Copy, Download, Eraser, FileUp, FlaskConical, Shuffle } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { inferSchema, parseJson, pascalCase, toFetch, toJsonSchema, toMock, toTypeScript, toZod } from '@stacksketch/core'
-import type { HttpMethod, Schema } from '@stacksketch/core'
+import { findDeclaration, inferSchema, parseJson, pascalCase, toFetch, toJsonSchema, toMock, toTypeScript, toZod } from '@stacksketch/core'
+import type { DeclarationLanguage, HttpMethod, Schema } from '@stacksketch/core'
 import { Button, Checkbox, IconButton, Pane, Segmented, Select, Tabs, TextInput, inputClass } from '@/components/ui/primitives'
 import { useResolvedTheme } from '@/hooks/useTheme'
 import { highlight } from '@/lib/codemirror'
 import { cx } from '@/lib/cx'
 import { copyText, downloadText } from '@/lib/download'
-import { useExplorer } from '@/store/explorer'
+import { useExplorer, useFocus } from '@/store/explorer'
 import type { MobilePane, OutputTab } from '@/store/explorer'
 import { CodeView } from './CodeView'
+import type { LineRange } from './CodeView'
 import { StructureTree } from './StructureTree'
 
-const TABS: { value: OutputTab; label: string; file: string; lang: 'ts' | 'json'; what: string }[] = [
-  { value: 'ts', label: 'TypeScript', file: 'types.ts', lang: 'ts', what: 'TypeScript types' },
-  { value: 'zod', label: 'Zod', file: 'schema.ts', lang: 'ts', what: 'Zod schema' },
+const SchemaGraph = lazy(() => import('./graph/SchemaGraph'))
+
+const TABS: { value: OutputTab; label: string; file: string; lang: 'ts' | 'json'; what: string; declares?: DeclarationLanguage }[] = [
+  { value: 'ts', label: 'TypeScript', file: 'types.ts', lang: 'ts', what: 'TypeScript types', declares: 'typescript' },
+  { value: 'zod', label: 'Zod', file: 'schema.ts', lang: 'ts', what: 'Zod schema', declares: 'zod' },
   { value: 'mock', label: 'Mock data', file: 'mock.json', lang: 'json', what: 'mock data' },
   { value: 'fetch', label: 'Fetch', file: 'api.ts', lang: 'ts', what: 'fetch function' },
-  { value: 'jsonschema', label: 'JSON Schema', file: 'schema.json', lang: 'json', what: 'JSON Schema' },
+  { value: 'jsonschema', label: 'JSON Schema', file: 'schema.json', lang: 'json', what: 'JSON Schema', declares: 'jsonschema' },
 ]
 
 const METHODS: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
@@ -172,6 +175,8 @@ function EmptyState({ text }: { text: string }) {
 
 function StructurePane({ schema, empty }: { schema: Schema | null; empty: string }) {
   const [mode, setMode] = useState({ openAll: false, n: 0 })
+  const view = useExplorer((s) => s.structureView)
+  const set = useExplorer((s) => s.set)
   const fields = schema?.types.flatMap((t) => t.fields) ?? []
   const optional = fields.filter((f) => f.optional).length
   return (
@@ -183,22 +188,40 @@ function StructurePane({ schema, empty }: { schema: Schema | null; empty: string
           : undefined
       }
       actions={
-        schema ? (
-          <IconButton
-            label={mode.openAll ? 'Collapse to two levels' : 'Expand everything'}
-            onClick={() => setMode((m) => ({ openAll: !m.openAll, n: m.n + 1 }))}
-          >
-            {mode.openAll ? <ChevronsDownUp size={15} /> : <ChevronsUpDown size={15} />}
-          </IconButton>
-        ) : null
+        <>
+          {schema && view === 'tree' ? (
+            <IconButton
+              label={mode.openAll ? 'Collapse to two levels' : 'Expand everything'}
+              onClick={() => setMode((m) => ({ openAll: !m.openAll, n: m.n + 1 }))}
+            >
+              {mode.openAll ? <ChevronsDownUp size={15} /> : <ChevronsUpDown size={15} />}
+            </IconButton>
+          ) : null}
+          <Segmented
+            label="Structure view"
+            className="ml-1"
+            value={view}
+            onChange={(structureView) => set({ structureView })}
+            options={[
+              { value: 'tree', label: 'Tree', title: 'Fields as a nested list' },
+              { value: 'graph', label: 'Graph', title: 'One card per type, with an edge for each reference' },
+            ]}
+          />
+        </>
       }
     >
-      {schema ? (
+      {!schema ? (
+        <EmptyState text={empty} />
+      ) : view === 'graph' ? (
+        <div className="absolute inset-0">
+          <Suspense fallback={<div className="paper-grid h-full" />}>
+            <SchemaGraph schema={schema} />
+          </Suspense>
+        </div>
+      ) : (
         <div className="absolute inset-0 overflow-auto scrollbar-thin">
           <StructureTree key={mode.n} schema={schema} openAll={mode.openAll} />
         </div>
-      ) : (
-        <EmptyState text={empty} />
       )}
     </Pane>
   )
@@ -271,6 +294,7 @@ function OutputPane({ schema, empty }: { schema: Schema | null; empty: string })
   const s = useExplorer()
   const [copied, setCopied] = useState(false)
   const tab = TABS.find((t) => t.value === s.output) ?? TABS[0]
+  const focus = useFocus()
 
   const code = useMemo(() => {
     if (!schema) return ''
@@ -287,6 +311,11 @@ function OutputPane({ schema, empty }: { schema: Schema | null; empty: string })
         return JSON.stringify(toJsonSchema(schema), null, 2) + '\n'
     }
   }, [schema, tab.value, s.tsStyle, s.tsReadonly, s.mockSeed, s.mockCount, s.method, s.url, s.validate])
+
+  const highlight = useMemo<LineRange | null>(() => {
+    const at = focus.type && tab.declares ? findDeclaration(code, focus.type, tab.declares) : null
+    return at ? { ...at, nonce: focus.nonce } : null
+  }, [code, focus.type, focus.nonce, tab.declares])
 
   const copy = async () => {
     try {
@@ -323,7 +352,7 @@ function OutputPane({ schema, empty }: { schema: Schema | null; empty: string })
           </div>
           <div className="relative min-h-0 flex-1">
             <div className="absolute inset-0">
-              <CodeView code={code} lang={tab.lang} label={`Generated ${tab.what}`} />
+              <CodeView code={code} lang={tab.lang} label={`Generated ${tab.what}`} highlight={highlight} />
             </div>
           </div>
         </>

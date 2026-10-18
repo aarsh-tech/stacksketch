@@ -13,3 +13,13 @@ export function downloadText(filename: string, text: string, type = 'text/plain'
 export async function copyText(text: string) {
   await navigator.clipboard.writeText(text)
 }
+
+/** Save a data: URL (e.g. a rendered image) as a file. */
+export function downloadDataUrl(filename: string, url: string) {
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.append(a)
+  a.click()
+  a.remove()
+}

@@ -182,8 +182,41 @@
   border: 1px solid var(--c-line) !important;
   color: var(--c-ink-2) !important;
 }
+.cm-focus-line {
+  background: color-mix(in srgb, var(--c-accent) 13%, transparent) !important;
+}
 .cm-error-line {
   background: color-mix(in srgb, var(--c-danger) 12%, transparent) !important;
+}
+
+/* ---------- React Flow (the structure graph) ---------- */
+.react-flow {
+  --xy-background-color: var(--c-canvas);
+  --xy-node-border-radius: 8px;
+  --xy-edge-stroke: var(--c-line-strong);
+  --xy-edge-stroke-width: 1.5;
+  --xy-attribution-background-color: transparent;
+}
+.react-flow__attribution a {
+  color: var(--c-ink-3);
+}
+.react-flow__handle {
+  opacity: 0;
+  pointer-events: none;
+  width: 1px;
+  height: 1px;
+  min-width: 1px;
+  min-height: 1px;
+  border: 0;
+}
+.react-flow__node:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+.react-flow__edge.is-lit .react-flow__edge-path {
+  stroke: var(--c-accent);
+  stroke-width: 2;
 }
 
 /* ---------- small utilities ---------- */

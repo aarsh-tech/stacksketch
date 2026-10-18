@@ -14,7 +14,8 @@ export default defineConfig({
   preview: { port: 4174 },
   build: {
     target: 'es2022',
-    chunkSizeWarningLimit: 800,
+    // elk.bundled (graph layout) is ~1.4 MB, but it's only fetched when the graph view opens
+    chunkSizeWarningLimit: 1500,
     rolldownOptions: {
       output: {
         codeSplitting: {

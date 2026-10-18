@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 
-import { fetchFunctionName, inferSchema, itemName, parseJson, pascalCase, toFetch, toJsonSchema, toMock, toTypeScript, toZod, typesTopDown } from './index'
+import { fetchFunctionName, findDeclaration, inferSchema, itemName, parseJson, pascalCase, toFetch, toJsonSchema, toMock, toTypeScript, toZod, typesTopDown } from './index'
 
 const orders = {
   page: 1,
@@ -181,5 +181,33 @@ describe('parseJson', () => {
     expect(msg('{"a": 1 "b": 2}')).toBe('Missing comma between properties')
     expect(msg('{"a": undefined}')).toBe('undefined is not valid JSON')
     expect(msg('{"a": 1')).toContain("Expected ',' or '}'")
+  })
+})
+
+describe('findDeclaration', () => {
+  const schema = inferSchema([orders], 'OrdersResponse')
+
+  it('finds a type in TypeScript, Zod and JSON Schema output', () => {
+    const ts = toTypeScript(schema)
+    const at = findDeclaration(ts, 'Customer', 'typescript')!
+    const lines = ts.split('\n')
+    expect(lines[at.from - 1]).toBe('export interface Customer {')
+    expect(lines[at.to - 1]).toBe('}')
+
+    const zod = toZod(schema)
+    const z2 = findDeclaration(zod, 'Customer', 'zod')!
+    expect(zod.split('\n')[z2.from - 1]).toBe('export const customerSchema = z.object({')
+    expect(zod.split('\n')[z2.to - 1]).toBe('export type Customer = z.infer<typeof customerSchema>')
+
+    const json = JSON.stringify(toJsonSchema(schema), null, 2)
+    const j = findDeclaration(json, 'Customer', 'jsonschema')!
+    expect(json.split('\n')[j.from - 1]).toBe('    "Customer": {')
+    expect(json.split('\n')[j.to - 1]).toMatch(/^ {4}\},?$/)
+  })
+
+  it('does not confuse a type with one whose name starts the same', () => {
+    const ts = toTypeScript(schema)
+    expect(ts.split('\n')[findDeclaration(ts, 'Order', 'typescript')!.from - 1]).toBe('export interface Order {')
+    expect(findDeclaration(ts, 'Nope', 'typescript')).toBeNull()
   })
 })

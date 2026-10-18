@@ -17,7 +17,7 @@ Every module reads and writes the shared schema in `packages/core/src/types.ts`.
 - Workbench shell with the module sidebar; planned modules show what they'll do.
 - Done: shipped in the initial commit.
 
-### - [ ] 2. Graph view on the canvas
+### - [x] 2. Graph view on the canvas
 
 - A "Tree | Graph" switch in the Structure pane. Graph draws one node per type and an edge per ref, with React Flow (`@xyflow/react`) and ELK auto-layout, like Schemasketch's tables.
 - Click a node to highlight its declaration in the generated code.
