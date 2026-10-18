@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import type { HttpMethod } from '@stacksketch/core'
+import { emptyOverrides } from '@stacksketch/core'
+import type { HttpMethod, Overrides } from '@stacksketch/core'
 import { SAMPLE_JSON, SAMPLE_ROOT, SAMPLE_URL } from '@/lib/sample'
 
 export type OutputTab = 'ts' | 'zod' | 'mock' | 'fetch' | 'jsonschema'
@@ -14,6 +15,8 @@ interface ExplorerState {
   output: OutputTab
   mobilePane: MobilePane
   structureView: StructureView
+  /** hand edits on top of the inferred schema */
+  overrides: Overrides
   tsStyle: 'interface' | 'type'
   tsReadonly: boolean
   method: HttpMethod
@@ -33,6 +36,7 @@ export const useExplorer = create<ExplorerState>()(
       output: 'ts',
       mobilePane: 'input',
       structureView: 'tree',
+      overrides: emptyOverrides(),
       tsStyle: 'interface',
       tsReadonly: false,
       method: 'GET',
@@ -45,9 +49,9 @@ export const useExplorer = create<ExplorerState>()(
     }),
     {
       name: 'stacksketch:explorer',
-      version: 2,
-      // v1 → v2: the Structure pane gained a Tree | Graph switch
-      migrate: (persisted) => ({ structureView: 'tree', ...(persisted as object) }) as ExplorerState,
+      version: 3,
+      // v1 → v2: the Structure pane gained a Tree | Graph switch; v2 → v3: schema edits
+      migrate: (persisted) => ({ structureView: 'tree', overrides: emptyOverrides(), ...(persisted as object) }) as ExplorerState,
     },
   ),
 )

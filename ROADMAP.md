@@ -24,7 +24,7 @@ Every module reads and writes the shared schema in `packages/core/src/types.ts`.
 - Export the graph as PNG and SVG.
 - Done when the sample response lays out cleanly in both themes and at phone width (graph pans and zooms by touch).
 
-### - [ ] 3. Edit the schema, not just read it
+### - [x] 3. Edit the schema, not just read it
 
 - Rename a type, mark a field optional/required/nullable, change a field's type or format (e.g. string → enum of the sample values), from the tree.
 - Edits live in an overrides layer on top of inference, so pasting a new sample keeps them.

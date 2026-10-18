@@ -177,7 +177,13 @@ export function inferSchema(samples: unknown[], rootName = 'Root'): Schema {
   let root: Shape
   if (raw.kind === 'array') root = { kind: 'array', items: toShape(raw.items, name, reg) }
   else root = toShape(raw, name, reg, true)
-  return { version: 1, rootName: name, root, types: reg.types }
+  return { version: 2, rootName: name, root, types: reg.types }
+}
+
+/** Load a schema saved by any version. v1 → v2 only added a shape kind, so v1 data is already valid. */
+export function upgradeSchema(saved: Omit<Schema, 'version'> & { version: number }): Schema {
+  if (saved.version > 2) throw new Error(`This schema was saved by a newer Stacksketch (format v${saved.version}). Update the app to open it.`)
+  return { ...saved, version: 2 }
 }
 
 /** Names of the object types a shape points at directly, in order. */

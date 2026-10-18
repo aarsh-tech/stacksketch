@@ -14,6 +14,7 @@ Free, open source, no account, no backend. Everything runs in your browser and n
 
 - Paste a JSON response, open a `.json` file, or start from the sample.
 - **Structure tree**: every nested object as a named type, with optional and nullable fields, detected formats (`uuid`, `email`, `date-time`, `date`, `uri`) and integer vs decimal numbers. Hover a field to see sample values.
+- **Edit the schema**: click the pencil on any field to change its type or format, mark it optional, required or nullable, turn a string into an enum of its sample values, or rename the type it holds. Fields like `status` and `currency` offer "enum?" in one click. Edits live on top of inference, so they survive a reload and pasting a new sample, and every output picks them up.
 - **Graph view**: switch the Structure pane from Tree to Graph to see one card per type with an edge for each reference, laid out automatically. Click a card to highlight its declaration in the generated code. Pan and pinch-zoom by touch, and export the graph as PNG or SVG.
 - **TypeScript**: `interface` or `type`, optional `readonly`, format notes as comments.
 - **Zod 4**: schemas with `z.email()`, `z.uuid()`, `z.iso.datetime()` and friends, each with its inferred type.

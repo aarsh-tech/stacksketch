@@ -159,6 +159,8 @@ function mockValue(f: Faker, shape: Shape, key: string, types: Map<string, Objec
       return mockNumber(f, shape, key)
     case 'boolean':
       return f.r() < 0.5
+    case 'enum':
+      return f.pick(shape.values)
     case 'null':
     case 'unknown':
       return null

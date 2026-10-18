@@ -3,10 +3,10 @@ import CodeMirror from '@uiw/react-codemirror'
 import type { ReactCodeMirrorRef } from '@uiw/react-codemirror'
 import { json } from '@codemirror/lang-json'
 import { Decoration, EditorView } from '@codemirror/view'
-import { AlignLeft, Braces, Check, ChevronsDownUp, ChevronsUpDown, CircleAlert, Copy, Download, Eraser, FileUp, FlaskConical, Shuffle } from 'lucide-react'
+import { AlignLeft, Braces, Check, ChevronsDownUp, ChevronsUpDown, CircleAlert, Copy, Download, Eraser, FileUp, FlaskConical, RotateCcw, Shuffle } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { findDeclaration, inferSchema, parseJson, pascalCase, toFetch, toJsonSchema, toMock, toTypeScript, toZod } from '@stacksketch/core'
+import { applyOverrides, countEdits, emptyOverrides, findDeclaration, inferSchema, parseJson, pascalCase, toFetch, toJsonSchema, toMock, toTypeScript, toZod } from '@stacksketch/core'
 import type { DeclarationLanguage, HttpMethod, Schema } from '@stacksketch/core'
 import { Button, Checkbox, IconButton, Pane, Segmented, Select, Tabs, TextInput, inputClass } from '@/components/ui/primitives'
 import { useResolvedTheme } from '@/hooks/useTheme'
@@ -173,10 +173,17 @@ function EmptyState({ text }: { text: string }) {
   )
 }
 
-function StructurePane({ schema, empty }: { schema: Schema | null; empty: string }) {
+function StructurePane({ inferred, schema, empty }: { inferred: Schema | null; schema: Schema | null; empty: string }) {
   const [mode, setMode] = useState({ openAll: false, n: 0 })
   const view = useExplorer((s) => s.structureView)
+  const overrides = useExplorer((s) => s.overrides)
   const set = useExplorer((s) => s.set)
+  const edits = countEdits(overrides)
+  const resetEdits = () => {
+    const before = overrides
+    set({ overrides: emptyOverrides() })
+    toast.success(`Undid ${edits} ${edits === 1 ? 'edit' : 'edits'}`, { action: { label: 'Bring them back', onClick: () => set({ overrides: before }) } })
+  }
   const fields = schema?.types.flatMap((t) => t.fields) ?? []
   const optional = fields.filter((f) => f.optional).length
   return (
@@ -189,6 +196,11 @@ function StructurePane({ schema, empty }: { schema: Schema | null; empty: string
       }
       actions={
         <>
+          {edits ? (
+            <IconButton label={`Undo all ${edits} schema ${edits === 1 ? 'edit' : 'edits'}`} onClick={resetEdits}>
+              <RotateCcw size={14} />
+            </IconButton>
+          ) : null}
           {schema && view === 'tree' ? (
             <IconButton
               label={mode.openAll ? 'Collapse to two levels' : 'Expand everything'}
@@ -220,7 +232,7 @@ function StructurePane({ schema, empty }: { schema: Schema | null; empty: string
         </div>
       ) : (
         <div className="absolute inset-0 overflow-auto scrollbar-thin">
-          <StructureTree key={mode.n} schema={schema} openAll={mode.openAll} />
+          <StructureTree key={mode.n} inferred={inferred ?? schema} schema={schema} openAll={mode.openAll} />
         </div>
       )}
     </Pane>
@@ -375,7 +387,9 @@ export function ApiExplorer() {
   const deferred = useDeferredValue(input)
 
   const parsed = useMemo(() => parseJson(deferred), [deferred])
-  const schema = useMemo(() => (parsed.ok ? inferSchema([parsed.value], rootName.trim() || 'Root') : null), [parsed, rootName])
+  const overrides = useExplorer((s) => s.overrides)
+  const inferred = useMemo(() => (parsed.ok ? inferSchema([parsed.value], rootName.trim() || 'Root') : null), [parsed, rootName])
+  const schema = useMemo(() => (inferred ? applyOverrides(inferred, overrides) : null), [inferred, overrides])
   const error = parsed.ok ? null : parsed
   const empty = !deferred.trim() ? 'Paste a JSON response on the left to see its structure.' : 'Fix the JSON on the left and the structure will show up here.'
 
@@ -401,7 +415,7 @@ export function ApiExplorer() {
           <InputPane error={error && !error.ok ? error : null} />
         </div>
         <div className={cx('min-h-0 min-w-0 flex-col [&>section]:flex-1', show('structure'), 'xl:flex')}>
-          <StructurePane schema={schema} empty={empty} />
+          <StructurePane inferred={inferred} schema={schema} empty={empty} />
         </div>
         <div className={cx('min-h-0 min-w-0 flex-col [&>section]:flex-1', show('code'), 'xl:flex')}>
           <OutputPane schema={schema} empty={empty} />

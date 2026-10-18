@@ -11,6 +11,8 @@ function node(shape: Shape): Json {
       return { type: shape.integer ? 'integer' : 'number' }
     case 'boolean':
       return { type: 'boolean' }
+    case 'enum':
+      return { type: 'string', enum: shape.values }
     case 'null':
       return { type: 'null' }
     case 'unknown':

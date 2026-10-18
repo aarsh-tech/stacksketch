@@ -20,11 +20,14 @@ export function tsType(shape: Shape): string {
       return shape.kind
     case 'number':
       return 'number'
+    case 'enum':
+      return shape.values.map((v) => JSON.stringify(v)).join(' | ')
     case 'ref':
       return shape.name
     case 'array': {
       const inner = tsType(shape.items)
-      return shape.items.kind === 'union' ? `(${inner})[]` : `${inner}[]`
+      const wrap = shape.items.kind === 'union' || (shape.items.kind === 'enum' && shape.items.values.length > 1)
+      return wrap ? `(${inner})[]` : `${inner}[]`
     }
     case 'union':
       return shape.options.map(tsType).join(' | ')

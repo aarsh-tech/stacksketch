@@ -1,7 +1,30 @@
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 
-import { fetchFunctionName, findDeclaration, inferSchema, itemName, parseJson, pascalCase, toFetch, toJsonSchema, toMock, toTypeScript, toZod, typesTopDown } from './index'
+import {
+  applyOverrides,
+  countEdits,
+  editField,
+  emptyOverrides,
+  enumCandidate,
+  fetchFunctionName,
+  findDeclaration,
+  inferredName,
+  inferSchema,
+  itemName,
+  parseJson,
+  pascalCase,
+  renameProblem,
+  renameType,
+  toFetch,
+  toJsonSchema,
+  toMock,
+  toTypeScript,
+  toZod,
+  typesTopDown,
+  upgradeSchema,
+} from './index'
+import type { Schema } from './index'
 
 const orders = {
   page: 1,
@@ -209,5 +232,67 @@ describe('findDeclaration', () => {
     const ts = toTypeScript(schema)
     expect(ts.split('\n')[findDeclaration(ts, 'Order', 'typescript')!.from - 1]).toBe('export interface Order {')
     expect(findDeclaration(ts, 'Nope', 'typescript')).toBeNull()
+  })
+})
+
+describe('overrides', () => {
+  const inferred = inferSchema([orders], 'OrdersResponse')
+  const fieldOf = (s: Schema, type: string, key: string) => s.types.find((t) => t.name === type)!.fields.find((f) => f.key === key)!
+
+  it('turns sample strings into an enum in every output', () => {
+    expect(enumCandidate('status', fieldOf(inferred, 'Order', 'status').shape)).toEqual(['shipped', 'pending'])
+    const s = applyOverrides(inferred, editField(emptyOverrides(), 'Order', 'status', { type: 'enum' }))
+    expect(fieldOf(s, 'Order', 'status').shape).toEqual({ kind: 'enum', values: ['shipped', 'pending'] })
+    expect(toTypeScript(s)).toContain('status: "shipped" | "pending"')
+    expect(toZod(s)).toContain('status: z.enum(["shipped", "pending"])')
+    const root = evalZod(toZod(s), 'ordersResponseSchema')
+    expect(root.safeParse(orders).success).toBe(true)
+    expect(root.safeParse({ ...orders, orders: [{ ...orders.orders[0], status: 'lost' }] }).success).toBe(false)
+    for (const seed of [1, 2, 3]) expect(root.safeParse(toMock(s, { seed })).success).toBe(true)
+    const js = toJsonSchema(s) as { $defs: Record<string, { properties: Record<string, unknown> }> }
+    expect(js.$defs.Order.properties.status).toEqual({ type: 'string', enum: ['shipped', 'pending'] })
+  })
+
+  it('only offers enums for short code-like values or enum-ish keys', () => {
+    expect(enumCandidate('name', fieldOf(inferred, 'Customer', 'name').shape)).toBeNull()
+    expect(enumCandidate('email', fieldOf(inferred, 'Customer', 'email').shape)).toBeNull()
+    expect(enumCandidate('sku', fieldOf(inferred, 'OrderItem', 'sku').shape)).toBeNull()
+  })
+
+  it('marks fields optional, required or nullable, and changes types and formats', () => {
+    let o = editField(emptyOverrides(), 'Customer', 'phone', { optional: false, nullable: true })
+    o = editField(o, 'Customer', 'email', { format: null })
+    o = editField(o, 'Order', 'coupon', { nullable: false })
+    o = editField(o, 'OrderItem', 'qty', { type: 'number' })
+    const ts = toTypeScript(applyOverrides(inferred, o))
+    expect(ts).toContain('  phone: string | null\n')
+    expect(ts).toContain('  email: string\n')
+    expect(ts).toContain('  coupon: string\n')
+    expect(toZod(applyOverrides(inferred, o))).toContain('qty: z.number(),')
+    expect(countEdits(o)).toBe(4)
+    expect(countEdits(editField(o, 'Customer', 'email', null))).toBe(3)
+  })
+
+  it('renames a type and every reference to it, and keeps edits when the sample changes', () => {
+    const o = renameType(editField(emptyOverrides(), 'Customer', 'phone', { optional: false }), 'Customer', 'Client')
+    const s = applyOverrides(inferred, o)
+    expect(s.types.map((t) => t.name)).toContain('Client')
+    expect(toTypeScript(s)).toContain('  customer: Client\n')
+    expect(inferredName(o, 'Client')).toBe('Customer')
+    expect(renameProblem(s, o, 'Customer', 'order')).toBe('Order is already the name of another type.')
+    // a new sample of the same API: the edits still apply
+    const next = inferSchema([{ ...orders, orders: [orders.orders[1]] }], 'OrdersResponse')
+    expect(toTypeScript(applyOverrides(next, o))).toContain('export interface Client {\n  id: string\n  name: string\n  email: string // email\n  phone: string\n}')
+  })
+
+  it('ignores renames that would clash', () => {
+    const s = applyOverrides(inferred, renameType(emptyOverrides(), 'Customer', 'Order'))
+    expect(s.types.filter((t) => t.name === 'Order')).toHaveLength(1)
+    expect(s.types.map((t) => t.name)).toContain('Customer')
+  })
+
+  it('loads v1 schemas', () => {
+    expect(upgradeSchema({ ...inferred, version: 1 }).version).toBe(2)
+    expect(() => upgradeSchema({ ...inferred, version: 3 })).toThrow(/newer Stacksketch/)
   })
 })

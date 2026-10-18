@@ -14,6 +14,8 @@ export type Shape =
   | { kind: 'string'; format?: StringFormat; examples?: string[] }
   | { kind: 'number'; integer: boolean; min?: number; max?: number }
   | { kind: 'boolean' }
+  /** a string that can only be one of `values` (never empty); added in schema v2 */
+  | { kind: 'enum'; values: string[] }
   | { kind: 'null' }
   /** nothing to go on, e.g. the items of an empty array */
   | { kind: 'unknown' }
@@ -35,7 +37,8 @@ export interface ObjectType {
 }
 
 export interface Schema {
-  version: 1
+  /** 2 added the `enum` shape; a v1 schema is a valid v2 schema (see `upgradeSchema`) */
+  version: 2
   /** the name the user gave the whole response */
   rootName: string
   root: Shape

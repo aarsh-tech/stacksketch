@@ -14,6 +14,8 @@ export function shapeText(shape: Shape): string {
       return shape.integer ? 'integer' : 'number'
     case 'ref':
       return shape.name
+    case 'enum':
+      return 'enum'
     case 'array':
       return shape.items.kind === 'union' ? `(${shapeText(shape.items)})[]` : `${shapeText(shape.items)}[]`
     case 'union':

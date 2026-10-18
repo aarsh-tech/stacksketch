@@ -32,6 +32,8 @@ export function zodExpr(shape: Shape): string {
       return shape.integer ? 'z.number().int()' : 'z.number()'
     case 'boolean':
       return 'z.boolean()'
+    case 'enum':
+      return `z.enum([${shape.values.map((v) => JSON.stringify(v)).join(', ')}])`
     case 'null':
       return 'z.null()'
     case 'unknown':
